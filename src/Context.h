@@ -5,6 +5,9 @@
 
 #include <vector>
 
+class Entity;
+class System;
+
 class Context {
 public:
 	Context() {};
@@ -15,8 +18,8 @@ public:
 		entities_.push_back(entity);
 
 		for (auto& sys : systems_) {
-			if (sys->isInterested(*entity)) {
-				sys->onEntityAdded(*entity);
+			if (sys->isInterested(*this, *entity)) {
+				sys->onEntityAdded(*this, *entity);
 			}
 		}
 	}
