@@ -88,6 +88,9 @@ int main(int, char*[]) {
 	auto foo = std::make_shared<Entity>();
 	foo->ensureComponents<PositionCmp>();
 
+
+	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
+
 	using one = std::integral_constant<int, 1>;
 	using two = std::integral_constant<int, 2>;
 	using five = std::integral_constant<int, two::value + two::value + one::value>;
@@ -97,6 +100,7 @@ int main(int, char*[]) {
 	std::cout << typeid(five).name() << std::endl;
 
 
+	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 
 	std::cout << "\t[cube]" << std::endl;
 	std::cout << "Has Position: " << tf(cube->hasComponent<PositionCmp>()) << std::endl;
@@ -132,7 +136,7 @@ int main(int, char*[]) {
 
 	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 
-	std::array<char, sizeof("hello world!")> s{'h', "ello world!" };
+	std::array<char, sizeof("hello world!")> s{"hello world!" };
 	std::array<char, sizeof("blabla")> S = { "blabla" };
 	//std::array<char, sizeof("hello world! ")> s2{ s,'h' };
 
@@ -143,7 +147,8 @@ int main(int, char*[]) {
 	constexpr Identifier m("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456");
 	constexpr Identifier n("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567");
 	constexpr bool ieqj = i == j;
-	constexpr auto ihash = i.hash();
+	//constexpr uint64_t ihash{ i.hash() }; // somehow this does not compile in VS, might be compiler bug
+	constexpr bool iltj = i < j;
 
 	std::cout << "Identifier " << i.name() << " " << i.hash() << std::endl;
 	std::cout << "Identifier " << j.name() << " " << j.hash() << std::endl;
@@ -152,11 +157,16 @@ int main(int, char*[]) {
 	std::cout << "Identifier " << m.name() << " " << m.hash() << std::endl;
 	std::cout << "Identifier " << n.name() << " " << n.hash() << std::endl;
 
-	std::cout << "i == j: " << tf(i == j) << std::endl;
+	std::cout << "i == j: " << tf(ieqj) << std::endl;
 	std::cout << "i == k: " << tf(i == k) << std::endl;
 	std::cout << "k == l: " << tf(k == l) << std::endl;
 	std::cout << "l == m: " << tf(l == m) << std::endl;
 	std::cout << "m == n: " << tf(m == n) << std::endl;
+	std::cout << "i < j: " << tf(iltj);
+
+	std::map<Identifier, std::shared_ptr<Component>> map;
+	map[i] = std::make_shared<PositionCmp>();
+	map[j] = std::make_shared<PositionCmp>();
 
 	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 	std::cout << "Fin." << std::endl;

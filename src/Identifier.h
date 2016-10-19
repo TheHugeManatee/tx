@@ -61,6 +61,22 @@ namespace /* Helpers for the Identifier class should not be interesting for anyo
 		return array_equal(a, b, 0);
 	}
 
+	template<typename T, size_t N>
+	bool constexpr array_less(const std::array<T, N>& a, const std::array<T, N>& b, size_t i) {
+		return i == N ?
+			false : // if we are at the end, arrays are equal
+			a[i] == b[i] ?
+				array_less(a, b, i + 1) :
+				a[i] < b[i];
+
+	}
+
+	/// recursive constexpr implementation for an equality check for arrays
+	template<typename T, size_t N>
+	bool constexpr array_less(const std::array<T, N>& a, const std::array<T, N>& b) {
+		return array_less(a, b, 0);
+	}
+
 }
 
 class Identifier {
@@ -68,11 +84,11 @@ public:
 	static constexpr unsigned int NUM_WORDS = 4;
 	static constexpr unsigned int MAX_LENGTH = NUM_WORDS * sizeof(uint64_t);
 
-	constexpr Identifier(uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3) : id_{ i0, i1, i2, i3 } {};
+	constexpr Identifier(uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3) : id_{ {i0, i1, i2, i3} } {};
 
 	template <size_t N>
 	constexpr Identifier(const char (&name)[N]) 
-		: id_{ setLong(name,0),setLong(name,1),setLong(name,2),setLong(name,3)} // could not find a generic implementation for this
+		: id_{ {setLong(name,0),setLong(name,1),setLong(name,2),setLong(name,3) } } // could not find a generic implementation for this
 	{}
 
 	constexpr uint64_t hash() const {
@@ -85,6 +101,10 @@ public:
 
 	constexpr bool operator==(const Identifier& other) const {
 		return array_equal(id_, other.id_);
+	}
+
+	constexpr bool operator<(const Identifier& other) const {
+		return array_less(id_, other.id_);
 	}
 
 private:
