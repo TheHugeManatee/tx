@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+#include <typeindex>
+
 struct Vec3 {
 	double x, y, z;
 };
@@ -67,6 +69,10 @@ template<typename T> void testSizeof() {
 	std::cout << "Size of " << typeid(T).name() << ": " << sizeof(T) << std::endl;
 }
 
+template<typename T> void testSizeof(const T&) {
+	std::cout << "Size of " << typeid(T).name() << ": " << sizeof(T) << std::endl;
+}
+
 template <size_t N>
 std::array<char, N> mk(std::array<char, N> l) {
 	return std::array<char, N>(l);
@@ -74,6 +80,22 @@ std::array<char, N> mk(std::array<char, N> l) {
 
 std::string tf(bool b) {
 	return b ? "true" : "false";
+}
+
+uint64_t hashTest(Identifier i) {
+	return i.hash();
+}
+
+std::string idName(const ComponentID& id) {
+	return "C" + id.name();
+}
+
+std::string idName(const EntityID& id) {
+	return "E" + id.name();
+}
+
+std::string idName(const Identifier& id) {
+	return "I" + id.name();
 }
 
 int main(int, char*[]) {
@@ -98,7 +120,6 @@ int main(int, char*[]) {
 	std::cout << typeid(one).name() << std::endl;
 	std::cout << typeid(two).name() << std::endl;
 	std::cout << typeid(five).name() << std::endl;
-
 
 	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 
@@ -147,7 +168,7 @@ int main(int, char*[]) {
 	constexpr Identifier m("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456");
 	constexpr Identifier n("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567");
 	constexpr bool ieqj = i == j;
-	//constexpr uint64_t ihash{ i.hash() }; // somehow this does not compile in VS, might be compiler bug
+	//constexpr uint64_t ihash{ i.hash() }; // somehow this does not run in VS, might be compiler bug
 	constexpr bool iltj = i < j;
 
 	std::cout << "Identifier " << i.name() << " " << i.hash() << std::endl;
@@ -162,11 +183,22 @@ int main(int, char*[]) {
 	std::cout << "k == l: " << tf(k == l) << std::endl;
 	std::cout << "l == m: " << tf(l == m) << std::endl;
 	std::cout << "m == n: " << tf(m == n) << std::endl;
-	std::cout << "i < j: " << tf(iltj);
+	std::cout << "i < j: " << tf(iltj) << std::endl;
 
 	std::map<Identifier, std::shared_ptr<Component>> map;
 	map[i] = std::make_shared<PositionCmp>();
 	map[j] = std::make_shared<PositionCmp>();
+
+	std::cout << "Hash of 's' is " << hashTest("s") << std::endl; // test implicit identifier instantiation
+
+	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
+
+	testSizeof(typeid(std::map<int, int>));
+	testSizeof(std::type_index(typeid(std::map<int, int>)));
+	testSizeof<ComponentID>();
+	testSizeof<EntityID>();
+
+	std::cout << "Strong typedef test: " << idName(Identifier("Identifier")) << ", " << idName(ComponentID("ComponentID")) << ", " << idName(EntityID("EntityID")) << std::endl;
 
 	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 	std::cout << "Fin." << std::endl;

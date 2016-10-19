@@ -8,6 +8,8 @@
 
 #include <cassert>
 
+#include "utils.h"
+
 // constexpr string, from Scott Schurr's presentation at CppNow! 2012
 class str_const {
 private:
@@ -22,7 +24,8 @@ public:
 			throw std::out_of_range("");
 	}
 	constexpr std::size_t size() const { return sz_; } // size()
-};
+};
+
 
 
 namespace /* Helpers for the Identifier class should not be interesting for anyone outside*/ {
@@ -71,7 +74,7 @@ namespace /* Helpers for the Identifier class should not be interesting for anyo
 
 	}
 
-	/// recursive constexpr implementation for an equality check for arrays
+	/// recursive constexpr implementation for an array equality check
 	template<typename T, size_t N>
 	bool constexpr array_less(const std::array<T, N>& a, const std::array<T, N>& b) {
 		return array_less(a, b, 0);
@@ -96,7 +99,8 @@ public:
 	}
 
 	std::string name() const {
-		return std::string(std::begin(name_), std::end(name_));
+		std::string n(std::begin(name_), std::end(name_)); // construct the string from the data
+		return n.substr(0, n.find_first_of('\0')); // truncate trailing zeros (for readability, technically this might lose data)
 	}
 
 	constexpr bool operator==(const Identifier& other) const {
@@ -113,3 +117,6 @@ private:
 		std::array<char, MAX_LENGTH> name_;
 	};
 };
+
+STRONG_TYPEDEF(Identifier, ComponentID);
+STRONG_TYPEDEF(Identifier, EntityID);
