@@ -20,7 +20,7 @@ class Entity {
 	using id_t = size_t;
 
 public:
-	id_t id() const noexcept {
+	id_t id() const NOEXCEPT {
 		return id_;
 	}
 
@@ -29,13 +29,13 @@ public:
 	}
 
 	template <class C>
-	bool hasComponent() const noexcept {
+	bool hasComponent() const NOEXCEPT {
 		auto it = components_.find(typeid(C).hash_code());
 		return (it != components_.end());
 	}
 
 	template <class C>
-	std::shared_ptr<C> getComponent() const noexcept{
+	std::shared_ptr<C> getComponent() const NOEXCEPT {
 		auto it = components_.find(typeid(C).hash_code());
 		if (it != components_.end()) {
 			return std::dynamic_pointer_cast<C>(it->second);
@@ -44,7 +44,7 @@ public:
 	}
 
 	template <class... C>
-	bool hasAspect() const noexcept {
+	bool hasAspect() const NOEXCEPT {
 		// a set of hash codes that we will clear
 		std::set<size_t> hashCodes{ (typeid(C).hash_code())... };
 
@@ -56,7 +56,7 @@ public:
 	}
 
 	template <template <class...> class A, class... C>
-	bool hasAspect() const noexcept {
+	bool hasAspect() const NOEXCEPT {
 		hasAspect<C...>();
 	}
 

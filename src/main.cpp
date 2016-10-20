@@ -161,15 +161,15 @@ int main(int, char*[]) {
 	std::array<char, sizeof("blabla")> S = { "blabla" };
 	//std::array<char, sizeof("hello world! ")> s2{ s,'h' };
 
-	constexpr Identifier i( "blabla" );
-	constexpr Identifier j("blablu");
-	constexpr Identifier k("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234");
-	constexpr Identifier l("ABCDEFGHIJKLMNOPQRSTUVWXYZ12345");
-	constexpr Identifier m("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456");
-	constexpr Identifier n("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567");
-	constexpr bool ieqj = i == j;
+	CONSTEXPR Identifier i( "blabla" );
+	CONSTEXPR Identifier j("blablu");
+	CONSTEXPR Identifier k("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234");
+	CONSTEXPR Identifier l("ABCDEFGHIJKLMNOPQRSTUVWXYZ12345");
+	CONSTEXPR Identifier m("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456");
+	CONSTEXPR Identifier n("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567");
+	CONSTEXPR bool ieqj = i == j;
 	//constexpr uint64_t ihash{ i.hash() }; // somehow this does not run in VS, might be compiler bug
-	constexpr bool iltj = i < j;
+	CONSTEXPR bool iltj = i < j;
 
 	std::cout << "Identifier " << i.name() << " " << i.hash() << std::endl;
 	std::cout << "Identifier " << j.name() << " " << j.hash() << std::endl;

@@ -39,3 +39,19 @@ struct strong_typedef<T, NameSeed, std::false_type>
 	bool operator<(const strong_typedef & rhs) const { return t < rhs.t; }
 };
 
+
+// constexpr string, from Scott Schurr's presentation at CppNow! 2012
+class str_const {
+private:
+	const char* const p_;
+	const std::size_t sz_;
+public:
+	template<std::size_t N>
+	CONSTEXPR str_const(const char(&a)[N]) : // ctor
+		p_(a), sz_(N - 1) {}
+	CONSTEXPR char operator[](std::size_t n) const { // []
+		return n < sz_ ? p_[n] :
+			throw std::out_of_range("");
+	}
+	CONSTEXPR std::size_t size() const { return sz_; } // size()
+};

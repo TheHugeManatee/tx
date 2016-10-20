@@ -8,7 +8,7 @@ public:
 
 	static const size_t nCmp = sizeof...(C);
 	
-	static bool hasAspect(const Entity& entity) noexcept {
+	static bool hasAspect(const Entity& entity) NOEXCEPT {
 		return entity.hasAspect<C...>();
 	}
 
