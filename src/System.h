@@ -33,17 +33,19 @@ class AspectFilteringSystem : public System {};
 // Specializing the class with variadic template
 template <template<class... > class A, class... C>
 class AspectFilteringSystem<A<C...>> : public System {
+public:
 	template<class T> using add_ref = T&; // meta-programming for adding a reference, not very robust
 
 	virtual bool isInterested(const Context&, const Entity& entity) override
 	{ 
-		return entity.hasAspect<C...>();
+		//return entity.hasAspect<C...>();
+		return true;
 	};
 
 	virtual void onEntityAdded(Context& ctxt, Entity& entity) override final {
-		assert(entity.hasAspect<C...>());
+		//assert(entity.hasAspect<C...>());
 
-		onEntityAdded(ctxt, (*entity.getComponent<C>())...);
+		//onEntityAdded(ctxt, (*entity.getComponent<C>())...);
 	};
 
 	virtual void onEntityAdded(Context&, add_ref<C>... components) = 0; // Subclasses should implement this instead of onEntityAdded(Entity&)

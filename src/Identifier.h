@@ -16,9 +16,14 @@ namespace /* Helpers for the Identifier class should not be interesting for anyo
 		return *str ? 1 + strlen_cexp(str + 1) : 0;
 	}
 
+	// Hash combine inspired by boost implementation
+	CONSTEXPR uint64_t hash_combine(const std::size_t& a, const std::size_t& b)	{
+		return b + 0x9e3779b9 + (a << 6) + (a >> 2);
+	}
+
 	/// accumulates a hash from an array by xor'ing all elements
 	CONSTEXPR uint64_t accum_hash(const uint64_t* begin, const uint64_t* end, uint64_t start) {
-		return begin == end ? (start ^ *begin) : (*begin ^ accum_hash(begin+1, end, start));
+		return begin == end ? hash_combine(start,  *begin) : hash_combine(*begin, accum_hash(begin+1, end, start));
 	}
 
 	/// sets a single byte read from an array at the appropriate position of a 64-bit int
@@ -70,7 +75,7 @@ public:
 	static const unsigned int MAX_LENGTH = NUM_WORDS * sizeof(uint64_t);
 
 #if defined(_MSC_VER) && _MSC_VER <= 1800
-	CONSTEXPR Identifier(uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3) {
+	CONSTEXPR Identifier(uint64_t i0 = 0, uint64_t i1 = 0, uint64_t i2 = 0, uint64_t i3 = 0) {
 		id_[0] = i0;
 		id_[1] = i1;
 		id_[2] = i2;
@@ -85,7 +90,7 @@ public:
 		id_[3] = setLong(name, 3);
 	}
 #else
-	CONSTEXPR Identifier(uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3) : id_{ i0, i1, i2, i3 } {};
+	CONSTEXPR Identifier(uint64_t i0 = 0, uint64_t i1 = 0, uint64_t i2 = 0, uint64_t i3 = 0) : id_{ i0, i1, i2, i3 } {};
 
 	template <size_t N>
 	CONSTEXPR Identifier(const char(&name)[N])
@@ -100,6 +105,10 @@ public:
 	std::string name() const {
 		std::string n(std::begin(name_), std::end(name_)); // construct the string from the data
 		return n.substr(0, n.find_first_of('\0')); // truncate trailing zeros (for readability, technically this might lose data)
+	}
+
+	operator std::string() const {
+		return name();
 	}
 
 	CONSTEXPR bool operator==(const Identifier& other) const {
@@ -117,5 +126,20 @@ private:
 	};
 };
 
+template<class T>
+struct IdentifierHash {
+public:
+	size_t operator()(const T &id) const {
+		return id.hash();
+	}
+};
+// template hash function to be used for strong typedefs
+namespace std { template<> class hash<Identifier> : public IdentifierHash<Identifier> { }; }
+
+// typedefs deriving from Identifier
 STRONG_TYPEDEF(Identifier, ComponentID);
+namespace std { template<> class hash<ComponentID> : public IdentifierHash<ComponentID> { }; }
 STRONG_TYPEDEF(Identifier, EntityID);
+namespace std { template<> class hash<EntityID> : public IdentifierHash<EntityID> { }; }
+STRONG_TYPEDEF(Identifier, TagID);
+namespace std { template<> class hash<TagID> : public IdentifierHash<TagID> { }; }
