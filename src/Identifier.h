@@ -90,7 +90,7 @@ public:
 		id_[3] = setLong(name, 3);
 	}
 #else
-	CONSTEXPR Identifier(uint64_t i0 = 0, uint64_t i1 = 0, uint64_t i2 = 0, uint64_t i3 = 0) : id_{ i0, i1, i2, i3 } {};
+	CONSTEXPR Identifier(uint64_t i0 = 0, uint64_t i1 = 0, uint64_t i2 = 0, uint64_t i3 = 0) : id_{ {i0, i1, i2, i3 } } {};
 
 	template <size_t N>
 	CONSTEXPR Identifier(const char(&name)[N])
@@ -123,6 +123,7 @@ private:
 	const union {
 		std::array<uint64_t, NUM_WORDS> id_;
 		std::array<char, MAX_LENGTH> name_;
+        char name__[MAX_LENGTH]; // not strictly necessary
 	};
 };
 
@@ -135,11 +136,15 @@ public:
 };
 // template hash function to be used for strong typedefs
 namespace std { template<> class hash<Identifier> : public IdentifierHash<Identifier> { }; }
+std::ostream & operator<<(std::ostream & str, const Identifier& iId) { str << iId.name(); return str; };
 
 // typedefs deriving from Identifier
 STRONG_TYPEDEF(Identifier, ComponentID);
 namespace std { template<> class hash<ComponentID> : public IdentifierHash<ComponentID> { }; }
+std::ostream & operator<<(std::ostream & str, const ComponentID& cId) { str << cId.name(); return str; };
 STRONG_TYPEDEF(Identifier, EntityID);
 namespace std { template<> class hash<EntityID> : public IdentifierHash<EntityID> { }; }
+std::ostream & operator<<(std::ostream & str, const EntityID& eId) { str << eId.name(); return str; };
 STRONG_TYPEDEF(Identifier, TagID);
 namespace std { template<> class hash<TagID> : public IdentifierHash<TagID> { }; }
+std::ostream & operator<<(std::ostream & str, const TagID& tId) { str << tId.name(); return str; };

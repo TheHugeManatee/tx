@@ -30,7 +30,6 @@ public:
 		return true;
 	}
 
-private:
 	//std::tuple<C...> defaults_;
 	std::array<ComponentID, sizeof...(C)> ids_;
 };

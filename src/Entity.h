@@ -21,7 +21,7 @@ class Entity {
 public:
 	friend class Context; // for prototyping
 
-	void setComponent(const ComponentID& id, std::unique_ptr<Component> component) NOEXCEPT {
+	void setComponent(const ComponentID& id, std::unique_ptr<ComponentBase> component) NOEXCEPT {
 		components_[id] = std::move(component);
 	}
 
@@ -70,32 +70,32 @@ public:
 	}
 
 private:
-	std::unordered_map<ComponentID, std::unique_ptr<Component>> components_;
+	std::unordered_map<ComponentID, std::unique_ptr<ComponentBase>> components_;
 };
 
-namespace {
-	// base implementation template
-	template <class... C>
-	struct ensureComponents_Impl;
-
-	// general recursion specialization
-	template <class C, class... Ctail>
-	struct ensureComponents_Impl<C, Ctail...> {
-		static void ensure(Entity& e) {
-			if (!e.hasComponent<C>())
-				e.setComponent(std::make_unique<C>());
-			e.ensureComponents<Ctail...>();
-		}
-	};
-
-	// specialization to end the recursion
-	template<> struct ensureComponents_Impl<> {
-		static void ensure(Entity&) {		}
-	};
-}
-
-template <class... C>
-void Entity::ensureComponents() {
-	ensureComponents_Impl<C...>::ensure(*this);
-}
+//namespace {
+//	// base implementation template
+//	template <class... C>
+//	struct ensureComponents_Impl;
+//
+//	// general recursion specialization
+//	template <class C, class... Ctail>
+//	struct ensureComponents_Impl<C, Ctail...> {
+//		static void ensure(Entity& e) {
+//			if (!e.hasComponent<C>())
+//				e.setComponent(std::make_unique<C>());
+//			e.ensureComponents<Ctail...>();
+//		}
+//	};
+//
+//	// specialization to end the recursion
+//	template<> struct ensureComponents_Impl<> {
+//		static void ensure(Entity&) {		}
+//	};
+//}
+//
+//template <class... C>
+//void Entity::ensureComponents() {
+//	//ensureComponents_Impl<C...>::ensure(*this);
+//}
 

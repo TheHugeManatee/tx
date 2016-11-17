@@ -11,42 +11,38 @@
 
 /// ======================== Some Classes to manage ========================
 struct Vec3 {
-	double x, y, z;
+    double x, y, z;
+    Vec3(double x_ = 0.0, double y_ = 0.0, double z_ = 0.0) : x(x_), y(y_), z(z_) {};
 };
 
 /// ======================== Some component definitions ========================
-class NameCmp : public Component {
 
-};
+//class PositionCmp : public Component<Vec3> {};
+//class VelocityCmp : public Component<Vec3> {};
+//struct meshCl {
+//	std::vector<Vec3> vertices;
+//	std::vector<size_t> indices;
+//};
+//class MeshCmp : public Component<meshCl> {};
+//class TagCmp : public Component<TagID>{};
 
-class PositionCmp : public Component {
-public:
-	Vec3 value;
+using PositionCmp = Component<Vec3>;
+using VelocityCmp = Component<Vec3>;
+struct meshCl {
+    std::vector<Vec3> vertices;
+    std::vector<size_t> indices;
 };
+using MeshCmp = Component<meshCl>;
+using TagCmp = Component<TagID>;
 
-class VelocityCmp : public Component {
-public:
-	Vec3 value;
-};
-
-class MeshCmp : public Component {
-public:
-	std::vector<Vec3> vertices;
-	std::vector<size_t> indices;
-};
-
-class TagCmp : public Component {
-	TagCmp(const TagID& tag_) : tag(tag_) {};
-	const TagID tag;
-};
 
 /// Generating an aspect - different API possibilities, not sure which one is the cleanest
 // generate aspect instance using make_aspect
-const auto simAspect = make_aspect(std::make_pair(ComponentID("Position"), PositionCmp()), std::make_pair(ComponentID("Velocity"), VelocityCmp()));
+//const auto simAspect = make_aspect(std::make_pair(ComponentID("Position"), PositionCmp()), std::make_pair(ComponentID("Velocity"), VelocityCmp()));
 // get type of the aspect
-using SimAspect = decltype(simAspect);
+using SimAspect = Aspect<PositionCmp, VelocityCmp>;
 // generate aspect instance using initializer list
-const SimAspect simAspect2({ "Position", "Velocity" });
+const SimAspect simAspect({ "Position", "Velocity" });
 // generate aspect instance using template arguments
 const Aspect<PositionCmp, VelocityCmp> simAspect3({ "Position", "Velocity" });
 
@@ -56,42 +52,51 @@ const Aspect<PositionCmp, VelocityCmp, MeshCmp> allAspect({ "Position", "Velocit
 
 /// ======================== defining some systems ========================
 
-class DrawingSystem : public AspectFilteringSystem<DrawAspect> {
+class DrawingSystem : public AspectSpecificSystem<DrawAspect> {
 public:
-	void onEntityAdded(Context&, PositionCmp&, MeshCmp&) override {
-		std::cout << "Drawing System noticed a new Entity!" << std::endl;
-	}
+	DrawingSystem(std::array<ComponentID, 2> cIds = { "Position", "Mesh" }) : AspectSpecificSystem<DrawAspect>(cIds) {};
+
 	void update(Context& c) override {
-		std::cout << "Drawing system processes: " << std::endl;
-		c.each(std::array<ComponentID, 2>{ "Position", "Mesh" }, [&c](const EntityID& id, PositionCmp&, MeshCmp&) -> void {
-			std::cout << "\t" << id.name() << std::endl;// << "\t" << e.stringify();
+		std::cout << "Drawing system update(): " << std::endl;
+		c.each(std::array<ComponentID, 2>{ "Position", "Mesh" }, [&c](const EntityID& id, PositionCmp& pos, MeshCmp&) -> void {
+			std::cout << "\t Drawing " << id << " at " << pos->x << " " << pos->y << " " << pos->z << std::endl;// << "\t" << e.stringify();
 		});
+	}
+
+	void onEntityAdded(Context&, const EntityID& eId, PositionCmp&, MeshCmp&) override {
+		std::cout << "Drawing System noticed a new Entity: " << eId << std::endl;
 	}
 };
 
-class SimulationSystem : public AspectFilteringSystem<SimAspect> {
+class SimulationSystem : public AspectSpecificSystem<SimAspect> {
 public:
-	//void onEntityAdded(Context&, PositionCmp&, VelocityCmp&) override {
-	//	std::cout << "Simulation System noticed a new Entity!" << std::endl;
-	//}
+	SimulationSystem(std::array<ComponentID, 2> cIds = { "Position", "Velocity" }) : AspectSpecificSystem<SimAspect>(cIds) {};
+
 	void update(Context& c) override {
-		std::cout << "Simulation System finds: " << std::endl;
-		c.each(std::array<ComponentID, 2>{ "Position", "Velocity" }, [&c](const EntityID& id, PositionCmp&, MeshCmp&) -> void {
-			std::cout << "\t" << id.name() << std::endl;
+		std::cout << "Simulation System update(): " << std::endl;
+		c.each(std::array<ComponentID, 2>{ "Position", "Velocity" }, [&c](const EntityID& id, PositionCmp& pos, VelocityCmp& v) -> void {
+            pos->x += v->x;
+            pos->y += v->y;
+            pos->z += v->z;
+			std::cout << "\tMoving " << id << " to " << pos->x << " " << pos->y << " " << pos->z << std::endl;
 		});
+	}
+
+	void onEntityAdded(Context&, const EntityID& eId, PositionCmp&, VelocityCmp&) override {
+		std::cout << "Simulation System acknowledges added entity " << eId << std::endl;
 	}
 };
 
 class UpdaterSystem : public System {
 public:
-	void onEntityAdded(Context&, Entity& e) override {
-		std::cout << "Updater System noticed a new Entity: " << e.stringify() << std::endl;
+	void onEntityAdded(Context&, const EntityID& eId) override {
+		std::cout << "Updater System noticed a new Entity: " << eId << std::endl;
 	}
 
 	void update(Context& c) override {
-		std::cout << "Updater finds: " << std::endl;
+		std::cout << "Updater update(): " << std::endl;
 		c.each([&c](const EntityID& id, Entity& e) -> void {
-			std::cout << "\t" << id.name() << std::endl;
+			std::cout << "\tUpdating " << id << std::endl;
 		});
 	}
 };
@@ -133,19 +138,20 @@ std::string idName(const Identifier& id) {
 /// ======================== the main function ========================
 int main(int, char*[]) {
 
+	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
+
 	auto cube = std::make_unique<Entity>();
-	cube->setComponent("Position", std::make_unique<PositionCmp>());
-	cube->setComponent("Velocity", std::make_unique<VelocityCmp>());
+	cube->setComponent("Position", std::make_unique<PositionCmp>(1.,1.,1.));
+	cube->setComponent("Velocity", std::make_unique<VelocityCmp>(2.,0.,0.));
 
 	auto circle = std::make_unique<Entity>();
-	circle->setComponent("Position", std::make_unique<PositionCmp>());
-	circle->setComponent("Velocity", std::make_unique<VelocityCmp>());
+	circle->setComponent("Position", std::make_unique<PositionCmp>(2.,2.,2.));
+	circle->setComponent("Velocity", std::make_unique<VelocityCmp>(0.,2.,0.));
 
 	auto foo = std::make_unique<Entity>();
-	foo->setComponent("Position", std::make_unique<PositionCmp>());
-	foo->setComponent("Velocity", std::make_unique<PositionCmp>());
+	foo->setComponent("Position", std::make_unique<PositionCmp>(3.,3.,3.));
+	foo->setComponent("Velocity", std::make_unique<VelocityCmp>(0.,0.,-2.));
 	foo->setComponent("Mesh", std::make_unique<PositionCmp>());
-
 
 	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 
@@ -212,12 +218,12 @@ int main(int, char*[]) {
 	//constexpr uint64_t ihash{ i.hash() }; // somehow this does not run in VS, might be compiler bug
 	CONSTEXPR bool iltj = i < j;
 
-	std::cout << "Identifier i: " << i.name() << " " << i.hash() << std::endl;
-	std::cout << "Identifier j: " << j.name() << " " << j.hash() << std::endl;
-	std::cout << "Identifier k: " << k.name() << " " << k.hash() << std::endl;
-	std::cout << "Identifier l: " << l.name() << " " << l.hash() << std::endl;
-	std::cout << "Identifier m: " << m.name() << " " << m.hash() << std::endl;
-	std::cout << "Identifier n: " << n.name() << " " << n.hash() << std::endl;
+	std::cout << "Identifier i: " << i << " " << i.hash() << std::endl;
+	std::cout << "Identifier j: " << j << " " << j.hash() << std::endl;
+	std::cout << "Identifier k: " << k << " " << k.hash() << std::endl;
+	std::cout << "Identifier l: " << l << " " << l.hash() << std::endl;
+	std::cout << "Identifier m: " << m << " " << m.hash() << std::endl;
+	std::cout << "Identifier n: " << n << " " << n.hash() << std::endl;
 
 	std::cout << "i == j: " << tf(ieqj) << std::endl;
 	std::cout << "i == k: " << tf(i == k) << std::endl;
@@ -227,7 +233,7 @@ int main(int, char*[]) {
 	std::cout << "i < j: " << tf(iltj) << std::endl;
 
 	// testing hash function
-	std::unordered_map<Identifier, std::shared_ptr<Component>> map;
+	std::unordered_map<Identifier, std::shared_ptr<ComponentBase>> map;
 	map[i] = std::make_shared<PositionCmp>();
 	map[j] = std::make_shared<PositionCmp>();
 

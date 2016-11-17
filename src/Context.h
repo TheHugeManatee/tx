@@ -7,10 +7,15 @@
 #include <vector>
 #include <unordered_map>
 #include <functional>
+#include <utility>
 
 
 class Entity;
 class System;
+class Context;
+
+template<typename Fn, size_t N, typename... C, size_t... CIndices>
+void callFuncWithComponents(Fn fn, Context &c, const EntityID& eId, const std::array<ComponentID, N>& cIds, std::index_sequence<CIndices...>);
 
 class Context {
 public:
@@ -20,44 +25,48 @@ public:
 
 	/// sets the entity with \a id, replacing a previous one if it existed
 	void setEntity(const EntityID& id, std::unique_ptr<Entity> entity) {
-		Entity& e = *entity;
 		entities_[id] = std::move(entity);
 
 		// TODO generate event
 	}
 
 	template<class S, typename... Args>
-	void addSystem(Args... args) {
-		// TODO check if already in there
-		systems_.emplace_back(std::make_unique<S>(std::forward<Args>(args)...));
-		systems_.back()->init(*this);
-	}
+	void addSystem(Args... args);
 
 	// implementation below
 	template<typename ArrayN, typename Fn> 	void each(ArrayN cIds, Fn fn);
 
-	void each(const std::function<void(const EntityID&, Entity&)> fn) {
-		for (auto& e : entities_) {
-			fn(e.first, *e.second);
-		}
-	}
+	void each(const std::function<void(const EntityID&, Entity&)> fn);
 
+	/// No idea what this is supposed to do *honesty first*
 	void notifyComponentChanged(const EntityID& eId, const ComponentID& cId) {
 		// TODO generate event
 		//std::cout << "Entity " << eId.name() << " changed Component " << cId.name();
 	}
 
+	/**
+	 *	Returns an entity with the specified eId. If none exists, a new one will be created.
+	 */
+	Entity& getEntity(const EntityID& eId) {
+		return *entities_[eId];
+	}
+
+	/**
+	 *	Returns the component of an entity. If it does not exist, creates one using the component's
+	 *	default constructor.
+	 */
 	template <typename C>
 	C& getComponent(const EntityID& eId, const ComponentID& cId)
 	{
-		return (C&)*((entities_[eId]->components_).find(cId)->second); // is this actually a thing?? 
+		assert(dynamic_cast<C*>(entities_[eId]->components_[cId].get()));
+
+		return static_cast<C&>(*entities_[eId]->components_[cId]);
 	}
 
-	void updateSystems() {
-		for (auto& s : systems_) {
-			s->update(*this);
-		}
-	}
+	/**
+	 *	Calls update() on all registered systems.
+	 */
+	void updateSystems();
 
 private:
 	std::unordered_map<EntityID, std::unique_ptr<Entity>> entities_;
@@ -79,19 +88,44 @@ private:
 			
 			static_assert(sizeof...(C) == N, "Number of Component IDs does not match functor signature!");
 
-			size_t idx_tmp = 0;
 			const auto aspect = Aspect<C...>(cIds);
 
 			for (auto& e : c.entities_) {
 				size_t idx = 0;
-				if(aspect.hasAspect(*e.second))
-					fn(e.first, c.getComponent<std::remove_reference<C>::type>(e.first, cIds[idx++])...);
+                if (aspect.hasAspect(*e.second))
+                    callFuncWithComponents<decltype(fn), N, C...>(fn, c, e.first, cIds, std::make_index_sequence<N>{});
+					//fn(e.first, c.getComponent<typename std::remove_reference<C>::type>(e.first, cIds[CIndices])...);
 			}
 		};
 	};
 };
 
+template<typename Fn, size_t N, typename... C, size_t... CIndices>
+void callFuncWithComponents(Fn fn, Context &c, const EntityID& eId, const std::array<ComponentID, N>& cIds, std::index_sequence<CIndices...>) {
+    fn(eId, c.getComponent<typename std::remove_reference<C>::type>(eId, cIds[CIndices])...);
+}
+
+template<class S, typename... Args>
+void Context::addSystem(Args... args)
+{
+	// TODO check if already in there
+	systems_.emplace_back(std::make_unique<S>(std::forward<Args>(args)...));
+	systems_.back()->init(*this);
+}
+
+void Context::each(const std::function<void(const EntityID&, Entity&)> fn) {
+	for (auto& e : entities_) {
+		fn(e.first, *e.second);
+	}
+}
+
 template<typename ArrayN, typename Fn>
 void Context::each(ArrayN cIds, Fn fn) {
 	each_variadic_impl<ArrayN, Fn>::impl(*this, cIds, fn);
+}
+
+void Context::updateSystems() {
+	for (auto& s : systems_) {
+		s->update(*this);
+	}
 }
