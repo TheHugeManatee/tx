@@ -1,8 +1,8 @@
 #pragma once
 
-#include <tuple>
+#include "Identifier.h"
 
-#include "Component.h"
+#include <tuple>
 
 template <class... C>
 class Aspect {
@@ -23,7 +23,7 @@ public:
 		//, defaults_{ std::move(args.second)... }
 	{}
 
-	bool hasAspect(const Entity& entity) const NOEXCEPT {
+	bool checkAspect(const Entity& entity) const NOEXCEPT {
 		size_t idx = 0;
 		bool aspects[] = { entity.hasComponent<C>(ids_[idx++])... };
 		for (auto flag : aspects) if (!flag) return false;
@@ -33,6 +33,8 @@ public:
 	//std::tuple<C...> defaults_;
 	std::array<ComponentID, sizeof...(C)> ids_;
 };
+
+#include "Component.h"
 
 template<class... C>
 Aspect<C...> make_aspect(std::pair<ComponentID, C>&&...  args)

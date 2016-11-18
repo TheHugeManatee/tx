@@ -37,7 +37,7 @@ public:
 	} 
 
 	const WrappedClass * operator->() const {
-		return value;
+		return &value;
 	}
 
 	WrappedClass & operator*() {

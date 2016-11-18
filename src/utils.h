@@ -94,3 +94,8 @@ struct function_traits<ReturnType(ClassType::*)(Args...) const>
 		// composed of those arguments.
 	};
 };
+
+// bool pack and all_true for sequences of booleans
+template<bool...> struct bool_pack;
+template<bool... bs>
+using all_true = std::is_same<bool_pack<bs..., true>, bool_pack<true, bs...>>;

@@ -52,53 +52,64 @@ const Aspect<PositionCmp, VelocityCmp, MeshCmp> allAspect({ "Position", "Velocit
 
 /// ======================== defining some systems ========================
 
-class DrawingSystem : public AspectSpecificSystem<DrawAspect> {
-public:
-	DrawingSystem(std::array<ComponentID, 2> cIds = { "Position", "Mesh" }) : AspectSpecificSystem<DrawAspect>(cIds) {};
-
-	void update(Context& c) override {
-		std::cout << "Drawing system update(): " << std::endl;
-		c.each(std::array<ComponentID, 2>{ "Position", "Mesh" }, [&c](const EntityID& id, PositionCmp& pos, MeshCmp&) -> void {
-			std::cout << "\t Drawing " << id << " at " << pos->x << " " << pos->y << " " << pos->z << std::endl;// << "\t" << e.stringify();
-		});
-	}
-
-	void onEntityAdded(Context&, const EntityID& eId, PositionCmp&, MeshCmp&) override {
-		std::cout << "Drawing System noticed a new Entity: " << eId << std::endl;
-	}
+class SetupSystem : public System {
+    bool update(Context &c) override {
+        c.setComponent<PositionCmp>("config", "origin", 0., 0., 0.);
+        c.setComponent<PositionCmp>("config", "direction");
+        c.setComponent<VelocityCmp>("config", "gravity", 0., 0., -9.81);
+        return true;
+    }
 };
 
-class SimulationSystem : public AspectSpecificSystem<SimAspect> {
+class DrawingSystem : public AspectSpecificSystem<DrawAspect> {
 public:
-	SimulationSystem(std::array<ComponentID, 2> cIds = { "Position", "Velocity" }) : AspectSpecificSystem<SimAspect>(cIds) {};
+	DrawingSystem() : AspectSpecificSystem<DrawAspect>(std::array<ComponentID, 2>{ "Position", "Mesh" }) {};
 
-	void update(Context& c) override {
+	bool update(Context& c) override {
+		std::cout << "Drawing system update(): " << std::endl;
+		c.each(std::array<ComponentID, 2>{ "Position", "Mesh" }, [&c](const EntityID& id, const PositionCmp& pos, const MeshCmp& m) -> void {
+			std::cout << "\t Drawing " << id << " with " << m->vertices.size() << " vertices at " << pos->x << " " << pos->y << " " << pos->z << std::endl;
+		});
+        return true;
+	}
+
+    void onEvent(const Event& e) override {
+        std::cout << "\t\t\tDrawing System got an event about " << e.eId << std::endl;
+        setInvalid();
+    }
+};
+
+class SimulationSystem : public System {
+public:
+	bool update(Context& c) override {
 		std::cout << "Simulation System update(): " << std::endl;
-		c.each(std::array<ComponentID, 2>{ "Position", "Velocity" }, [&c](const EntityID& id, PositionCmp& pos, VelocityCmp& v) -> void {
+		c.each(std::array<ComponentID, 2>{ "Position", "Velocity" }, [&c](const EntityID& id, PositionCmp& pos, const VelocityCmp& v) -> void {
             pos->x += v->x;
             pos->y += v->y;
             pos->z += v->z;
 			std::cout << "\tMoving " << id << " to " << pos->x << " " << pos->y << " " << pos->z << std::endl;
 		});
+        return false;
 	}
 
-	void onEntityAdded(Context&, const EntityID& eId, PositionCmp&, VelocityCmp&) override {
-		std::cout << "Simulation System acknowledges added entity " << eId << std::endl;
-	}
+    void onEvent(const Event& e) override {
+        std::cout << "\t\t\tSimulation System got an event about " << e.eId << std::endl;
+    }
 };
 
 class UpdaterSystem : public System {
 public:
-	void onEntityAdded(Context&, const EntityID& eId) override {
-		std::cout << "Updater System noticed a new Entity: " << eId << std::endl;
-	}
-
-	void update(Context& c) override {
+	bool update(Context& c) override {
 		std::cout << "Updater update(): " << std::endl;
-		c.each([&c](const EntityID& id, Entity& e) -> void {
+		c.each([&c](const EntityID& id, Entity& e) {
 			std::cout << "\tUpdating " << id << std::endl;
 		});
+        return false;
 	}
+
+    void onEvent(const Event& e) override {
+        std::cout << "\t\t\tUpdating System got an event about " << e.eId << std::endl;
+    }
 };
 
 /// ======================== various helper and test functions ========================
@@ -135,23 +146,25 @@ std::string idName(const Identifier& id) {
 	return "I" + id.name();
 }
 
+#include <unordered_map>
+
 /// ======================== the main function ========================
 int main(int, char*[]) {
 
 	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 
-	auto cube = std::make_unique<Entity>();
-	cube->setComponent("Position", std::make_unique<PositionCmp>(1.,1.,1.));
-	cube->setComponent("Velocity", std::make_unique<VelocityCmp>(2.,0.,0.));
+	Entity cube;
+	cube.setComponent("Position", std::make_unique<PositionCmp>(1.,1.,1.));
+	cube.setComponent("Velocity", std::make_unique<VelocityCmp>(2.,0.,0.));
 
-	auto circle = std::make_unique<Entity>();
-	circle->setComponent("Position", std::make_unique<PositionCmp>(2.,2.,2.));
-	circle->setComponent("Velocity", std::make_unique<VelocityCmp>(0.,2.,0.));
+    Entity circle;
+	circle.setComponent("Position", std::make_unique<PositionCmp>(2.,2.,2.));
+	circle.setComponent("Velocity", std::make_unique<VelocityCmp>(0.,2.,0.));
 
-	auto foo = std::make_unique<Entity>();
-	foo->setComponent("Position", std::make_unique<PositionCmp>(3.,3.,3.));
-	foo->setComponent("Velocity", std::make_unique<VelocityCmp>(0.,0.,-2.));
-	foo->setComponent("Mesh", std::make_unique<PositionCmp>());
+    Entity foo;
+	foo.setComponent("Position", std::make_unique<PositionCmp>(3.,3.,3.));
+	foo.setComponent("Velocity", std::make_unique<VelocityCmp>(0.,0.,-2.));
+	foo.setComponent("Mesh", std::make_unique<MeshCmp>());
 
 	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 
@@ -166,32 +179,40 @@ int main(int, char*[]) {
 	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 
 	std::cout << "\t[cube]" << std::endl;
-	std::cout << "Has Position: " << tf(cube->hasComponent<PositionCmp>("Position")) << std::endl;
-	std::cout << "Has Velocity: " << tf(cube->hasComponent<VelocityCmp>("Velocity")) << std::endl;
-	std::cout << "Has Mesh: " << (cube->hasComponent<MeshCmp>("Mesh") ? "true" : "false") << std::endl;
-	std::cout << "Has Simulation Aspect: " << (simAspect.hasAspect(*cube) ? "true" : "false") << std::endl;
-	std::cout << "Has Drawing Aspect: " << (drawAspect.hasAspect(*cube) ? "true" : "false") << std::endl;
+	std::cout << "Has Position: " << tf(cube.hasComponent<PositionCmp>("Position")) << std::endl;
+	std::cout << "Has Velocity: " << tf(cube.hasComponent<VelocityCmp>("Velocity")) << std::endl;
+	std::cout << "Has Mesh: " << (cube.hasComponent<MeshCmp>("Mesh") ? "true" : "false") << std::endl;
+	std::cout << "Has Simulation Aspect: " << (simAspect.checkAspect(cube) ? "true" : "false") << std::endl;
+	std::cout << "Has Drawing Aspect: " << (drawAspect.checkAspect(cube) ? "true" : "false") << std::endl;
 
 	std::cout << "\t[circle]" << std::endl;
-	std::cout << "Has Position: " << (circle->hasComponent<PositionCmp>("Position") ? "true" : "false") << std::endl;
-	std::cout << "Has Velocity: " << (circle->hasComponent<VelocityCmp>("Velocity") ? "true" : "false") << std::endl;
-	std::cout << "Has Mesh: " << (circle->hasComponent<MeshCmp>("Mesh") ? "true" : "false") << std::endl;
-	std::cout << "Has Simulation Aspect: " << (simAspect.hasAspect(*circle) ? "true" : "false") << std::endl;
-	std::cout << "Has Drawing Aspect: " << (drawAspect.hasAspect(*circle) ? "true" : "false") << std::endl;
+	std::cout << "Has Position: " << (circle.hasComponent<PositionCmp>("Position") ? "true" : "false") << std::endl;
+	std::cout << "Has Velocity: " << (circle.hasComponent<VelocityCmp>("Velocity") ? "true" : "false") << std::endl;
+	std::cout << "Has Mesh: " << (circle.hasComponent<MeshCmp>("Mesh") ? "true" : "false") << std::endl;
+	std::cout << "Has Simulation Aspect: " << (simAspect.checkAspect(circle) ? "true" : "false") << std::endl;
+	std::cout << "Has Drawing Aspect: " << (drawAspect.checkAspect(circle) ? "true" : "false") << std::endl;
 	
+    std::cout << "\t[foo]" << std::endl;
+    std::cout << "Has Position: " << (foo.hasComponent<PositionCmp>("Position") ? "true" : "false") << std::endl;
+    std::cout << "Has Velocity: " << (foo.hasComponent<VelocityCmp>("Velocity") ? "true" : "false") << std::endl;
+    std::cout << "Has Mesh: " << (foo.hasComponent<MeshCmp>("Mesh") ? "true" : "false") << std::endl;
+    std::cout << "Has Simulation Aspect: " << (simAspect.checkAspect(foo) ? "true" : "false") << std::endl;
+    std::cout << "Has Drawing Aspect: " << (drawAspect.checkAspect(foo) ? "true" : "false") << std::endl;
+
 	Context world;
-	world.addSystem<DrawingSystem>();
+
+    world.addSystem<SetupSystem>();
 	world.addSystem<SimulationSystem>();
 	world.addSystem<UpdaterSystem>();
+    world.addSystem<DrawingSystem>();
 
-	world.setEntity("cube", std::move(cube));
-	world.setEntity("circle", std::move(circle));
-	world.setEntity("foo", std::move(foo));
+    world.setEntity("cube", std::move(cube));
+    world.setEntity("circle", std::move(circle));
+    world.setEntity("foo", std::move(foo));
 
 	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 	std::cout << "Updating the world.." << std::endl;
-	world.updateSystems();
-	world.updateSystems();
+    world.runSequential([]() { static int t = 0; return ++t < 3; });
 
 	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 

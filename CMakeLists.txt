@@ -1,16 +1,18 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0.2 FATAL_ERROR)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.1 FATAL_ERROR)
 
-project(ECS)
+project(TX)
 
-FILE(GLOB ECSHeaders
+set(CMAKE_CXX_STANDARD 14)
+
+FILE(GLOB TXHeaders
     src/*.h
 )
-FILE(GLOB ECSSource
-    src/*.cpp
+FILE(GLOB TXSource
+    src/main.cpp
 )
 
 IF(MSVC12)
-	add_definitions(-DOVERRIDE=)
+	add_definitions(-DOVERRIDE=override)
 	add_definitions(-DNOEXCEPT=)
 	add_definitions(-DCONSTEXPR=)
 ELSE()
@@ -23,5 +25,9 @@ ENDIF()
 INCLUDE_DIRECTORIES(src)
 # TARGET_LINK_LIBRARIES()
 
-add_executable(ecs ${ECSSource} ${ECSHeaders})
+add_executable(ecs-example ${TXSource} ${TXHeaders})
+
+
+add_executable(testing src/testing.cpp ${TXHeaders})
+
 

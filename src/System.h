@@ -6,24 +6,27 @@
 
 class Context;
 class Entity;
+struct Event;
+
+template<typename... C> class Aspect;
 
 class System {
 public:
-	System() {};
+    System() : invalid_{ true } {};
 	virtual ~System() {};
 
-	virtual bool isInterested(const Context&, const EntityID&, const Entity&) { return true; };
+	virtual bool isInterested(const Context&, const EntityID&) { return false; };
 
 	virtual void init(Context& ) {};
-	virtual void update(Context& ) {};
+    virtual bool update(Context&) { return false; }; // updates the system. return whether it is now in a valid state or not
+    virtual void onEvent(const Event& ) {};
 
-	virtual void onEntityAdded(Context&, const EntityID& ) {};
-	virtual void onEntityChanged(Context&, const EntityID& ) {};
-	virtual void onEntityRemoved(Context&, const EntityID& ) {};
+    void setInvalid() {  invalid_ = true;    }
+    void setValid()   {  invalid_ = false;   }
+    bool isValid()    {  return !invalid_;   }
 
-	
 private:
-
+    bool invalid_;
 };
 
 // This template is needed so we can specialize it with a variadic template later
@@ -35,41 +38,25 @@ template <template<class... > class Aspect_, class... C>
 class AspectSpecificSystem<Aspect_<C...>> : public System {
 public:
 	const size_t nCmp = sizeof...(C);
-	template<class T> using add_ref = T&; // meta-programming for adding a reference, probably should use something from STL instead...
 
 	AspectSpecificSystem(const std::array<ComponentID, sizeof...(C)>& cIds) 
 		: aspect(cIds)
 	{	}
 
-	virtual bool isInterested(const Context&, const EntityID& eId, const Entity& entity) override;
+    virtual ~AspectSpecificSystem() {
+    }
 
-	virtual void onEntityAdded(Context& ctxt, const EntityID& eId) override final;
-
-	/// Subclasses have to implement this instead of onEntityAdded(Context&,EntityID&)
-	virtual void onEntityAdded(Context&, const EntityID&, C&... components) = 0; 
-	
-	//virtual void onEntityChanged(A::type_tuple components) {};
-	
-	//virtual void onEntityRemoved(A::type_tuple components) {};
-
+	virtual bool isInterested(const Context&, const EntityID& eId) override;
+    
 private:
 	Aspect<C...> aspect;
 };
 
+
 #include "Context.h"
 
 template <template<class... > class Aspect_, class... C>
-void AspectSpecificSystem<Aspect_<C...>>::onEntityAdded(Context& ctxt, const EntityID& eId)
+bool AspectSpecificSystem<Aspect_<C...>>::isInterested(const Context& c, const EntityID& eId)
 {
-	assert(aspect.hasAspect(ctxt.getEntity(eId)));
-
-	size_t idx = 0;
-	onEntityAdded(ctxt, eId, ctxt.getComponent<C>(eId, aspect.ids_[idx++])...);
-}
-
-
-template <template<class... > class Aspect_, class... C>
-bool AspectSpecificSystem<Aspect_<C...>>::isInterested(const Context&, const EntityID& eId, const Entity& entity)
-{
-	return aspect.hasAspect(entity);
+	return aspect.checkAspect(c.getEntity(eId));
 }
