@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ *	\file utils.h
+ *	Various utility functions and classes, mostly related to meta-programming of some kind
+ */
+
 // strong typedefs taken from http://stackoverflow.com/a/28928606/2415419
 
 #include <utility>
@@ -99,3 +104,4 @@ struct function_traits<ReturnType(ClassType::*)(Args...) const>
 template<bool...> struct bool_pack;
 template<bool... bs>
 using all_true = std::is_same<bool_pack<bs..., true>, bool_pack<true, bs...>>;
+

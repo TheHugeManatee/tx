@@ -27,7 +27,6 @@ INCLUDE_DIRECTORIES(src)
 
 add_executable(ecs-example ${TXSource} ${TXHeaders})
 
-
 add_executable(testing src/testing.cpp ${TXHeaders})
 
 

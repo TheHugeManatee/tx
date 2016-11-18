@@ -37,9 +37,9 @@ public:
         return *this;
     }
 
-    // explicitly deleted copy constructor and assignment
-    Entity(Entity& rhs) = delete;
-    Entity& operator=(Entity& rhs)  = delete;
+    // we cannot copy 
+    Entity(const Entity& rhs) = delete;
+    Entity& operator=(const Entity& rhs) = delete;
 
     std::string toString() const;
 
