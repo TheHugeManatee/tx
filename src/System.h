@@ -37,7 +37,7 @@ class AspectSpecificSystem : public System {};
 template <template<class... > class Aspect_, class... C>
 class AspectSpecificSystem<Aspect_<C...>> : public System {
 public:
-	const size_t nCmp = sizeof...(C);
+//	const size_t nCmp = sizeof...(C);
 
 	AspectSpecificSystem(const std::array<ComponentID, sizeof...(C)>& cIds) 
 		: aspect(cIds)

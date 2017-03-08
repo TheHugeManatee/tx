@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Event.h"
 #include "Identifier.h"
 
 #include <vector>
@@ -10,27 +11,9 @@
 
 #include <iostream>
 
+
 class Entity;
 class System;
-
-struct Event {
-    enum EventType {
-        COMPONENTCHANGED,
-        ENTITYREMOVED
-    };
-
-    Event(EventType type_, const EntityID& eId0_, const EntityID& eId1_) :
-        type(type_), eId(eId0_), eId1(eId1_) {};
-    Event(EventType type_, const EntityID& eId_, const ComponentID& cId_) :
-        type(type_), eId(eId_), cId(cId_) {};
-
-    EventType type;
-    EntityID eId;
-    union {
-        ComponentID cId;
-        EntityID eId1;
-    };
-};
 
 class Context {
 public:

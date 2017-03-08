@@ -17,8 +17,8 @@ public:
 
 	}
 
-	template<class... C>
-	Aspect(std::pair<ComponentID, C>&&...  args) NOEXCEPT
+	template<class... C1>
+	Aspect(std::pair<ComponentID, C1>&&...  args) NOEXCEPT
 		: ids_{ std::move(args.first)... } 
 		//, defaults_{ std::move(args.second)... }
 	{}

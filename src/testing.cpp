@@ -10,6 +10,8 @@
 #include <iostream>
 #include <typeindex>
 
+#pragma GCC diagnostic ignore "-Wmissing-braces"
+
 /// ======================== Some Classes to manage ========================
 struct Vec3 {
     double x, y, z;
@@ -84,6 +86,7 @@ class SimulationSystem : public System {
 public:
     bool update(Context& c) override {
         std::cout << "Simulation System update(): " << std::endl;
+
         c.each(std::array<ComponentID, 2>{ "Position", "Velocity" }, [&c](const EntityID& id, PositionCmp& pos, const VelocityCmp& v) -> void {
             pos->x += v->x;
             pos->y += v->y;
@@ -147,7 +150,6 @@ std::string idName(const Identifier& id) {
     return "I" + id.name();
 }
 
-#include <unordered_map>
 
 /// ======================== the main function ========================
 int main(int, char*[]) {
@@ -214,6 +216,8 @@ int main(int, char*[]) {
     std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
     std::cout << "Updating the world.." << std::endl;
     world.runSequential([]() { static int t = 0; return ++t < 3; });
+
+    Vec3 g = *world.getComponent<VelocityCmp>("config", "gravity"); // query a component
 
     std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 

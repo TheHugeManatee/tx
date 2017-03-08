@@ -1,8 +1,9 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.1 FATAL_ERROR)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12 FATAL_ERROR)
 
 project(TX)
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 FILE(GLOB TXHeaders
     src/*.h
@@ -27,6 +28,7 @@ INCLUDE_DIRECTORIES(src)
 
 add_executable(ecs-example ${TXSource} ${TXHeaders})
 
-add_executable(testing src/testing.cpp ${TXHeaders})
+include_directories(src)
+add_executable(testing src/testing.cpp)
 
 
