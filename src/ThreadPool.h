@@ -71,13 +71,13 @@ namespace tx
             IThreadTask& operator=(const IThreadTask& rhs) = delete;
             IThreadTask(IThreadTask&& other) = default;
             IThreadTask& operator=(IThreadTask&& other) = default;
- 
+
             /**
              * Run the task.
              */
             virtual void execute() = 0;
         };
- 
+
         template <typename Func>
         class ThreadTask: public IThreadTask
         {
@@ -86,13 +86,13 @@ namespace tx
                 :m_func{std::move(func)}
             {
             }
- 
+
             ~ThreadTask(void) override = default;
             ThreadTask(const ThreadTask& rhs) = delete;
             ThreadTask& operator=(const ThreadTask& rhs) = delete;
             ThreadTask(ThreadTask&& other) = default;
             ThreadTask& operator=(ThreadTask&& other) = default;
- 
+
             /**
              * Run the task.
              */
@@ -100,11 +100,11 @@ namespace tx
             {
                 m_func();
             }
- 
+
         private:
             Func m_func;
         };
- 
+
     public:
         /**
          * Constructor.
@@ -118,7 +118,7 @@ namespace tx
              * hardware_concurrency() and 2 before subtracting 1.
              */
         }
- 
+
         /**
          * Constructor.
          */
@@ -140,17 +140,17 @@ namespace tx
                 throw;
             }
         }
- 
+
         /**
          * Non-copyable.
          */
         ThreadPool(const ThreadPool& rhs) = delete;
- 
+
         /**
          * Non-assignable.
          */
         ThreadPool& operator=(const ThreadPool& rhs) = delete;
- 
+
         /**
          * Destructor.
          */
@@ -158,7 +158,7 @@ namespace tx
         {
             destroy();
         }
- 
+
         /**
          * Submit a job to be run by the thread pool.
          */
@@ -169,13 +169,13 @@ namespace tx
             using ResultType = std::result_of_t<decltype(boundTask)()>;
             using PackagedTask = std::packaged_task<ResultType()>;
             using TaskType = ThreadTask<PackagedTask>;
-             
+
             PackagedTask task{std::move(boundTask)};
             TaskFuture<ResultType> result{task.get_future()};
             m_workQueue.push(std::make_unique<TaskType>(std::move(task)));
             return result;
         }
- 
+
     private:
         /**
          * Constantly running function each thread uses to acquire work items from the queue.
@@ -191,7 +191,7 @@ namespace tx
                 }
             }
         }
- 
+
         /**
          * Invalidates the queue and joins all running threads.
          */
@@ -207,13 +207,13 @@ namespace tx
                 }
             }
         }
- 
+
     private:
         std::atomic_bool m_done;
         ThreadSafeQueue<std::unique_ptr<IThreadTask>> m_workQueue;
         std::vector<std::thread> m_threads;
     };
- 
+
     namespace DefaultThreadPool
     {
         /**
@@ -224,7 +224,7 @@ namespace tx
         {
             return getThreadPool().submit(std::forward<Func>(func), std::forward<Args>(args)...);
         }
- 
+
         /**
          * Get the default thread pool for the application.
          * This pool is created with std::thread::hardware_concurrency() - 1 threads.
@@ -236,5 +236,5 @@ namespace tx
         }
     }
 } // namespace tx
- 
+
 #endif

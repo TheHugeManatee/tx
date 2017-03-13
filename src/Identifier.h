@@ -139,6 +139,7 @@ namespace tx {
         }
     };
 
+    // typedefs deriving from Identifier
     STRONG_TYPEDEF(Identifier, ComponentID);
     STRONG_TYPEDEF(Identifier, EntityID);
     STRONG_TYPEDEF(Identifier, TagID);
@@ -150,15 +151,11 @@ namespace tx {
 namespace std { template<> class hash<tx::Identifier> : public tx::IdentifierHash<tx::Identifier> { }; }
 std::ostream & operator<<(std::ostream & str, const tx::Identifier& iId) { str << iId.name(); return str; };
 
-// typedefs deriving from Identifier
-
 namespace std { template<> class hash<tx::ComponentID> : public tx::IdentifierHash<tx::ComponentID> { }; }
 std::ostream & operator<<(std::ostream & str, const tx::ComponentID& cId) { str << cId.name(); return str; };
 
-
 namespace std { template<> class hash<tx::EntityID> : public tx::IdentifierHash<tx::EntityID> { }; }
 std::ostream & operator<<(std::ostream & str, const tx::EntityID& eId) { str << eId.name(); return str; };
-
 
 namespace std { template<> class hash<tx::TagID> : public tx::IdentifierHash<tx::TagID> { }; }
 std::ostream & operator<<(std::ostream & str, const tx::TagID& tId) { str << tId.name(); return str; };

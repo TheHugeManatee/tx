@@ -213,37 +213,41 @@ namespace tx {
 #include "Entity.h"
 #include "System.h"
 
-template<class S, typename... Args>
-void tx::Context::emplaceSystem(Args... args)
-{
-    // TODO check if already in there
-    systems_.emplace_back(std::make_unique<S>(std::forward<Args>(args)...));
-    systems_.back()->init(*this);
-}
+namespace tx {
 
-
-tx::TaskFuture<size_t> tx::Context::each(const std::function<void(const EntityID&, Entity&)> fn) {
-    std::promise<size_t> pr;
-
-    size_t n = 0;
-    for (auto& e : entities_) {
-        fn(e.first, e.second);
-        ++n;
+    template<class S, typename... Args>
+    void Context::emplaceSystem(Args... args)
+    {
+        // TODO check if already in there
+        systems_.emplace_back(std::make_unique<S>(std::forward<Args>(args)...));
+        systems_.back()->init(*this);
     }
-    pr.set_value(n);
-    return pr.get_future();
-}
 
-template<typename ArrayN, typename Fn>
-tx::TaskFuture<size_t> tx::Context::each(ArrayN cIds, Fn fn) {
-    return each_variadic_impl<ArrayN, Fn>::impl(*this, cIds, fn);
-}
 
-void tx::Context::updateSystems() {
-    for (auto& s : systems_) {
-        if (!s->isValid()) {
-            if (s->update(*this))
-                s->setValid();
+    TaskFuture<size_t> Context::each(const std::function<void(const EntityID&, Entity&)> fn) {
+        std::promise<size_t> pr;
+
+        size_t n = 0;
+        for (auto& e : entities_) {
+            fn(e.first, e.second);
+            ++n;
+        }
+        pr.set_value(n);
+        return pr.get_future();
+    }
+
+    template<typename ArrayN, typename Fn>
+    TaskFuture<size_t> Context::each(ArrayN cIds, Fn fn) {
+        return each_variadic_impl<ArrayN, Fn>::impl(*this, cIds, fn);
+    }
+
+    void Context::updateSystems() {
+        for (auto& s : systems_) {
+            if (!s->isValid()) {
+                if (s->update(*this))
+                    s->setValid();
+            }
         }
     }
-}
+
+} // namespace tx

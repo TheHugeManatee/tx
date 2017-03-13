@@ -128,8 +128,12 @@ namespace tx {
 
 #include "Context.h"
 
-template <template<class... > class Aspect_, class... C>
-bool tx::AspectSpecificSystem<Aspect_<C...>>::isInterested(const Context& c, const EntityID& eId) const
-{
-    return aspect.checkAspect(c.getEntity(eId));
-}
+namespace tx {
+
+    template <template<class... > class Aspect_, class... C>
+    bool AspectSpecificSystem<Aspect_<C...>>::isInterested(const Context& c, const EntityID& eId) const
+    {
+        return aspect.checkAspect(c.getEntity(eId));
+    }
+
+} // namespace tx

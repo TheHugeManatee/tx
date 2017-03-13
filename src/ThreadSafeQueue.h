@@ -4,16 +4,16 @@
  * by "willp" http://roar11.com/2016/01/a-platform-independent-thread-pool-using-c14/
  */
 #pragma once
- 
+
 #ifndef THREADSAFEQUEUE_H__
 #define THREADSAFEQUEUE_H__
- 
+
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
 #include <queue>
 #include <utility>
- 
+
 namespace tx
 {
     template <typename T>
@@ -27,7 +27,7 @@ namespace tx
         {
             invalidate();
         }
- 
+
         /**
          * Attempt to get the first value in the queue.
          * Returns true if a value was successfully written to the out parameter, false otherwise.
@@ -43,7 +43,7 @@ namespace tx
             m_queue.pop();
             return true;
         }
- 
+
         /**
          * Get the first value in the queue.
          * Will block until a value is available unless clear is called or the instance is destructed.
@@ -68,7 +68,7 @@ namespace tx
             m_queue.pop();
             return true;
         }
- 
+
         /**
          * Push a new value onto the queue.
          */
@@ -78,7 +78,7 @@ namespace tx
             m_queue.push(std::move(value));
             m_condition.notify_one();
         }
- 
+
         /**
          * Check whether or not the queue is empty.
          */
@@ -87,7 +87,7 @@ namespace tx
             std::lock_guard<std::mutex> lock{m_mutex};
             return m_queue.empty();
         }
- 
+
         /**
          * Clear all items from the queue.
          */
@@ -100,7 +100,7 @@ namespace tx
             }
             m_condition.notify_all();
         }
- 
+
         /**
          * Invalidate the queue.
          * Used to ensure no conditions are being waited on in waitPop when
@@ -114,7 +114,7 @@ namespace tx
             m_valid = false;
             m_condition.notify_all();
         }
- 
+
         /**
          * Returns whether or not this queue is valid.
          */
@@ -123,7 +123,7 @@ namespace tx
             std::lock_guard<std::mutex> lock{m_mutex};
             return m_valid;
         }
- 
+
     private:
         std::atomic_bool m_valid{true};
         mutable std::mutex m_mutex;
@@ -131,5 +131,5 @@ namespace tx
         std::condition_variable m_condition;
     };
 }
- 
+
 #endif

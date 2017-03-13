@@ -12,7 +12,7 @@ namespace tx {
 
         static const size_t nCmp = sizeof...(C);
 
-        Aspect(std::array < ComponentID, sizeof...(C)> ids) NOEXCEPT
+        Aspect(std::array<ComponentID, sizeof...(C)> ids) NOEXCEPT
             : ids_{ std::move(ids) }
             //, defaults_(std::make_tuple<C...>(C()...))
         {
@@ -36,12 +36,15 @@ namespace tx {
         std::array<ComponentID, sizeof...(C)> ids_;
     };
 
-}
+} // namespace tx
 
 #include "Component.h"
 
-template<class... C>
-tx::Aspect<C...> tx::make_aspect(std::pair<tx::ComponentID, C>&&...  args)
-{
-    return Aspect<C...>(std::move(args)...);
-}
+namespace tx {
+
+    template<class... C>
+    Aspect<C...> make_aspect(std::pair<ComponentID, C>&&...  args)
+    {
+        return Aspect<C...>(std::move(args)...);
+    }
+} // namespace tx

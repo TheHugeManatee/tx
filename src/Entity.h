@@ -56,22 +56,26 @@ namespace tx {
 #include "Component.h"
 #include "Identifier.h"
 
-template <typename C>
-bool tx::Entity::hasComponent(const ComponentID& id) const NOEXCEPT {
-    auto it = components_.find(id);
-    return (it != components_.end());
-}
+namespace tx {
 
-template <typename C>
-void tx::Entity::setComponent(const ComponentID& id, C&& componentData) NOEXCEPT {
-    components_.emplace(std::make_pair(id, std::make_unique<Component<C>>(componentData)));
-}
+    template <typename C>
+    bool Entity::hasComponent(const ComponentID& id) const NOEXCEPT {
+        auto it = components_.find(id);
+        return (it != components_.end());
+    }
 
-std::string tx::Entity::toString() const {
-    std::stringstream sstr;
-    sstr << "Entity [";
-    for (const auto& cmp : components_)
-        sstr << cmp.first.name() << ": " << typeid(*cmp.second.get()).name() << "|";
-    sstr << " ]";
-    return sstr.str();
-}
+    template <typename C>
+    void Entity::setComponent(const ComponentID& id, C&& componentData) NOEXCEPT {
+        components_.emplace(std::make_pair(id, std::make_unique<Component<C>>(componentData)));
+    }
+
+    std::string Entity::toString() const {
+        std::stringstream sstr;
+        sstr << "Entity [";
+        for (const auto& cmp : components_)
+            sstr << cmp.first.name() << ": " << typeid(*cmp.second.get()).name() << "|";
+        sstr << " ]";
+        return sstr.str();
+    }
+
+} // namespace tx
