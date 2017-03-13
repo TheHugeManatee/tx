@@ -9,6 +9,9 @@
 #include <iostream>
 #include <typeindex>
 
+#pragma GCC diagnostic ignored "-Wmissing-braces"
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
 /// ======================== Some Classes to manage ========================
 struct Vec3 {
     double x, y, z;
@@ -26,14 +29,14 @@ struct Vec3 {
 //class MeshCmp : public Component<meshCl> {};
 //class TagCmp : public Component<TagID>{};
 
-using PositionCmp = Component<Vec3>;
-using VelocityCmp = Component<Vec3>;
+using PositionCmp = Vec3;
+using VelocityCmp = Vec3;
 struct meshCl {
     std::vector<Vec3> vertices;
     std::vector<size_t> indices;
 };
-using MeshCmp = Component<meshCl>;
-using TagCmp = Component<TagID>;
+using MeshCmp = meshCl;
+using TagCmp = TagID;
 
 
 /// Generating an aspect - different API possibilities, not sure which one is the cleanest
@@ -53,62 +56,66 @@ const Aspect<PositionCmp, VelocityCmp, MeshCmp> allAspect({ "Position", "Velocit
 /// ======================== defining some systems ========================
 
 class SetupSystem : public System {
-    bool update(Context &c) override {
-        c.setComponent<PositionCmp>("config", "origin", 0., 0., 0.);
-        c.setComponent<PositionCmp>("config", "direction");
-        c.setComponent<VelocityCmp>("config", "gravity", 0., 0., -9.81);
-        return true;
+    void init(Context &c) override {
+        std::cout << "Setup system initializing.." << std::endl;
+        c.emplaceComponent<PositionCmp>("config", "origin", 0., 0., 0.);
+        c.emplaceComponent<PositionCmp>("config", "direction");
+        c.emplaceComponent<VelocityCmp>("config", "gravity", 0., 0., -9.81);
     }
 };
 
 class DrawingSystem : public AspectSpecificSystem<DrawAspect> {
 public:
-	DrawingSystem() : AspectSpecificSystem<DrawAspect>(std::array<ComponentID, 2>{ "Position", "Mesh" }) {};
+    DrawingSystem() : AspectSpecificSystem<DrawAspect>(std::array<ComponentID, 2>{ "Position", "Mesh" }) {};
 
-	bool update(Context& c) override {
-		std::cout << "Drawing system update(): " << std::endl;
-		c.each(std::array<ComponentID, 2>{ "Position", "Mesh" }, [&c](const EntityID& id, const PositionCmp& pos, const MeshCmp& m) -> void {
-			std::cout << "\t Drawing " << id << " with " << m->vertices.size() << " vertices at " << pos->x << " " << pos->y << " " << pos->z << std::endl;
-		});
+    bool update(Context& c) override {
+        std::cout << "Drawing system update(): " << std::endl;
+
+        processEvents([](const Event& e) {
+            std::cout << "\t\t\tDrawing System got an event about " << e.eId << std::endl;
+        });
+
+        c.each(std::array<ComponentID, 2>{ "Position", "Mesh" }, [&c](const EntityID& id, const PositionCmp& pos, const MeshCmp& m) -> void {
+            std::cout << "\t Drawing " << id << " with " << m.vertices.size() << " vertices at " << pos.x << " " << pos.y << " " << pos.z << std::endl;
+        });
         return true;
-	}
-
-    void onEvent(const Event& e) override {
-        std::cout << "\t\t\tDrawing System got an event about " << e.eId << std::endl;
-        setInvalid();
     }
 };
 
 class SimulationSystem : public System {
 public:
-	bool update(Context& c) override {
-		std::cout << "Simulation System update(): " << std::endl;
-		c.each(std::array<ComponentID, 2>{ "Position", "Velocity" }, [&c](const EntityID& id, PositionCmp& pos, const VelocityCmp& v) -> void {
-            pos->x += v->x;
-            pos->y += v->y;
-            pos->z += v->z;
-			std::cout << "\tMoving " << id << " to " << pos->x << " " << pos->y << " " << pos->z << std::endl;
-		});
-        return false;
-	}
+    bool update(Context& c) override {
+        std::cout << "Simulation System update(): " << std::endl;
 
-    void onEvent(const Event& e) override {
-        std::cout << "\t\t\tSimulation System got an event about " << e.eId << std::endl;
+        processEvents([](const Event& e) {
+            std::cout << "\t\t\tSimulation System got an event about " << e.eId << std::endl;
+        });
+
+        Vec3 g;
+        c.getComponent("config", "gravity", g);
+        c.each(std::array<ComponentID, 2>{ "Position", "Velocity" }, [&g](const EntityID& id, PositionCmp& pos, const VelocityCmp& v) -> void {
+            pos.x += v.x;
+            pos.y += v.y;
+            pos.z += v.z;
+            std::cout << "\tMoving " << id << " to " << pos.x << " " << pos.y << " " << pos.z << std::endl;
+        });
+        return false;
     }
 };
 
 class UpdaterSystem : public System {
 public:
-	bool update(Context& c) override {
-		std::cout << "Updater update(): " << std::endl;
-		c.each([&c](const EntityID& id, Entity& e) {
-			std::cout << "\tUpdating " << id << std::endl;
-		});
-        return false;
-	}
+    bool update(Context& c) override {
+        std::cout << "Updater update(): " << std::endl;
 
-    void onEvent(const Event& e) override {
-        std::cout << "\t\t\tUpdating System got an event about " << e.eId << std::endl;
+        processEvents([](const Event& e) {
+            std::cout << "\t\t\tUpdater System got an event about " << e.eId << std::endl;
+        });
+
+        c.each([&c](const EntityID& id, Entity& e) {
+            std::cout << "\tUpdating " << id << std::endl;
+        });
+        return false;
     }
 };
 
@@ -116,40 +123,44 @@ public:
 /// ======================== the main function ========================
 int main(int, char*[]) {
 
-	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
+    std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 
-	Entity cube;
-	cube.setComponent("Position", std::make_unique<PositionCmp>(1.,1.,1.));
-	cube.setComponent("Velocity", std::make_unique<VelocityCmp>(2.,0.,0.));
+    Entity cube;
+    cube.setComponent("Position", PositionCmp(1.,1.,1.));
+    cube.setComponent("Velocity", VelocityCmp(2.,0.,0.));
 
     Entity circle;
-	circle.setComponent("Position", std::make_unique<PositionCmp>(2.,2.,2.));
-	circle.setComponent("Velocity", std::make_unique<VelocityCmp>(0.,2.,0.));
+    circle.setComponent("Position", PositionCmp(2.,2.,2.));
+    circle.setComponent("Velocity", VelocityCmp(0.,2.,0.));
 
     Entity foo;
-	foo.setComponent("Position", std::make_unique<PositionCmp>(3.,3.,3.));
-	foo.setComponent("Velocity", std::make_unique<VelocityCmp>(0.,0.,-2.));
-	foo.setComponent("Mesh", std::make_unique<MeshCmp>());
+    foo.setComponent("Position", PositionCmp(3.,3.,3.));
+    foo.setComponent("Velocity", VelocityCmp(0.,0.,-2.));
+    foo.setComponent("Mesh", MeshCmp());
 
-	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
+    std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 
-	Context world;
+    Context world;
 
-    world.addSystem<SetupSystem>();
-	world.addSystem<SimulationSystem>();
-	world.addSystem<UpdaterSystem>();
-    world.addSystem<DrawingSystem>();
+    world.emplaceSystem<SetupSystem>();
+    world.emplaceSystem<SimulationSystem>();
+    world.emplaceSystem<UpdaterSystem>();
+    world.emplaceSystem<DrawingSystem>();
 
     world.setEntity("cube", std::move(cube));
     world.setEntity("circle", std::move(circle));
     world.setEntity("foo", std::move(foo));
 
-	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
-	std::cout << "Updating the world.." << std::endl;
-    world.runSequential([]() { static int t = 0; return ++t < 3; });
+    std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
+    std::cout << "Updating the world.." << std::endl;
+    world.runSequential([]() {
+        static int t = 0;
+        std::cout << "***************************** tick " << t << std::endl;
+        return ++t < 3;
+    });
 
-	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
+    std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 
-	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
-	std::cout << std::endl << std::endl << "\t\t\t~~~ Fin. ~~~" << std::endl << std::endl;
+    std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
+    std::cout << std::endl << std::endl << "\t\t\t~~~ Fin. ~~~" << std::endl << std::endl;
 }

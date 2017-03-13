@@ -6,7 +6,17 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 FILE(GLOB TXHeaders
-    src/*.h
+    src/Aspect.h
+    src/Component.h
+    src/ComponentProxy.h
+    src/Context.h
+    src/Entity.h
+    src/Event.h
+    src/Identifier.h
+    src/System.h
+    src/ThreadPool.h
+    src/ThreadSafeQueue.h
+    src/utils.h
 )
 FILE(GLOB TXSource
     src/main.cpp

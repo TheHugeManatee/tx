@@ -8,21 +8,14 @@
 
 #include "Identifier.h"
 
-
-
-template <class... C> class Aspect;
-template <typename WrappedClass> class Component;
 class ComponentBase;
+template <typename WrappedClass> class Component;
+template <class... C> class Aspect;
+
 
 class Entity {
+    friend class Context;
 public:
-    friend class Context; // for prototyping
-
-    void setComponent(const ComponentID& id, std::unique_ptr<ComponentBase> component) NOEXCEPT;
-
-    template <class C>
-    bool hasComponent(const Identifier& id) const NOEXCEPT;
-
     // default constructor
     Entity() : components_() {};
 
@@ -33,30 +26,41 @@ public:
 
     // move assignment
     Entity& operator=(Entity&& rhs) {
-        components_ = std::move(rhs.components_);
+        components_ = std::move(rhs.components_); 
         return *this;
     }
 
-    // we cannot copy 
+    // we cannot copy
     Entity(const Entity& rhs) = delete;
     Entity& operator=(const Entity& rhs) = delete;
+
+    template<typename C>
+    void setComponent(const ComponentID& id, C&& componentData) NOEXCEPT;
+
+    template <typename C>
+    bool hasComponent(const ComponentID& id) const NOEXCEPT;
+
 
     std::string toString() const;
 
 private:
-	std::unordered_map<ComponentID, std::unique_ptr<ComponentBase>> components_;
+    std::unordered_map<ComponentID, std::unique_ptr<ComponentBase>> components_;
+public:
+    using component_iterator = decltype(components_)::iterator;
 };
 
 #include "Component.h"
+#include "Identifier.h"
 
-template <class C>
-bool Entity::hasComponent(const Identifier& id) const NOEXCEPT {
+template <typename C>
+bool Entity::hasComponent(const ComponentID& id) const NOEXCEPT {
     auto it = components_.find(id);
     return (it != components_.end());
 }
 
-void Entity::setComponent(const ComponentID& id, std::unique_ptr<ComponentBase> component) NOEXCEPT {
-    components_[id] = std::move(component);
+template <typename C>
+void Entity::setComponent(const ComponentID& id, C&& componentData) NOEXCEPT {
+    components_.emplace(std::make_pair(id, std::make_unique<Component<C>>(componentData)));
 }
 
 std::string Entity::toString() const {
