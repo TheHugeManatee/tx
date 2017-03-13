@@ -7,6 +7,8 @@
 #include "Identifier.h"
 #include "utils.h"
 
+using namespace tx;
+
 #include <vector>
 #include <iostream>
 #include <typeindex>

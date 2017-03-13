@@ -5,6 +5,8 @@
 #include "Context.h"
 #include "Identifier.h"
 
+using namespace tx;
+
 #include <vector>
 #include <iostream>
 #include <typeindex>

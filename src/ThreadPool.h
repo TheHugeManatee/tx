@@ -4,12 +4,12 @@
  * by "willp" http://roar11.com/2016/01/a-platform-independent-thread-pool-using-c14/
  */
 #pragma once
- 
+
 #ifndef THREADPOOL_H__
 #define THREADPOOL_H__
- 
+
 #include "ThreadSafeQueue.h"
- 
+
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
@@ -20,7 +20,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
- 
+
 namespace tx
 {
     /**
@@ -104,9 +104,6 @@ namespace tx
         private:
             Func m_func;
         };
- 
-    public:
-
  
     public:
         /**
@@ -238,6 +235,6 @@ namespace tx
             return defaultPool;
         }
     }
-}
+} // namespace tx
  
 #endif
