@@ -2,6 +2,7 @@
 
 #include "Event.h"
 #include "Identifier.h"
+#include "ThreadPool.h"
 
 #include <vector>
 #include <unordered_map>
@@ -29,9 +30,9 @@ public:
     void emplaceSystem(Args... args);
 
     template<typename ArrayN, typename Fn>
-    void each(ArrayN cIds, Fn fn);
+    tx::TaskFuture<size_t> each(ArrayN cIds, Fn fn);
 
-    void each(const std::function<void(const EntityID&, Entity&)> fn);
+    tx::TaskFuture<size_t> each(const std::function<void(const EntityID&, Entity&)> fn);
 
     /**
      *	Returns an entity with the specified eId. If none exists, a new one will be created.
@@ -75,7 +76,7 @@ public:
 
 
     /**
-    *  Returns the component of an entity. If it either entity or component do not exist,
+    *  Returns the component of an entity. If either entity or component do not exist,
     *  an instance is created using default constructor.
     */
     template <typename C>
@@ -173,12 +174,17 @@ private:
         : public each_variadic_impl<ArrayN, decltype(&Fn::operator())>
     {};
 
-    // partial specialization on the lambda function
+    // partial specialization of each() w.r.t. the lambda function as a struct
     template <size_t N, typename ClassType, typename FirstArgType, typename ReturnType, typename... ComponentArgs>
     struct each_variadic_impl<std::array<ComponentID, N>, ReturnType(ClassType::*) (FirstArgType, ComponentArgs...) const>
     {
+        /**
+         *  Implements each() with an array of known component types and a functional type FFn
+         */
         template <typename FFn>
-        static void impl(Context& c, std::array<ComponentID, N> cIds, FFn fn) {
+        static tx::TaskFuture<size_t> impl(Context& c, std::array<ComponentID, N> cIds, FFn fn) {
+            std::promise<size_t> pr;
+
             // Check the number of components and IDs
             static_assert(sizeof...(ComponentArgs) == N, "Number of Component IDs does not match functor signature!");
             // check the functor signature
@@ -187,10 +193,16 @@ private:
 
             const auto aspect = Aspect<ComponentArgs...>(cIds);
 
+            size_t n = 0;
             for (auto& e : c.entities_) {
-                if (aspect.checkAspect(e.second))
+                if (aspect.checkAspect(e.second)) {
                     c.callFuncWithComponents<ComponentArgs...>(fn, e.first, cIds, std::make_index_sequence<N>{}, e.first);
+                    ++n;
+                }
             }
+
+            pr.set_value(n);
+            return pr.get_future();
         };
     };
 };
@@ -208,15 +220,21 @@ void Context::emplaceSystem(Args... args)
 }
 
 
-void Context::each(const std::function<void(const EntityID&, Entity&)> fn) {
+tx::TaskFuture<size_t> Context::each(const std::function<void(const EntityID&, Entity&)> fn) {
+    std::promise<size_t> pr;
+
+    size_t n = 0;
     for (auto& e : entities_) {
         fn(e.first, e.second);
+        ++n;
     }
+    pr.set_value(n);
+    return pr.get_future();
 }
 
 template<typename ArrayN, typename Fn>
-void Context::each(ArrayN cIds, Fn fn) {
-    each_variadic_impl<ArrayN, Fn>::impl(*this, cIds, fn);
+tx::TaskFuture<size_t> Context::each(ArrayN cIds, Fn fn) {
+    return each_variadic_impl<ArrayN, Fn>::impl(*this, cIds, fn);
 }
 
 void Context::updateSystems() {

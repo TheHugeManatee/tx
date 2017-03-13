@@ -14,7 +14,7 @@
 #include <queue>
 #include <utility>
  
-namespace threading
+namespace tx
 {
     template <typename T>
     class ThreadSafeQueue

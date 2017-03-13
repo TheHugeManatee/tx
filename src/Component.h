@@ -62,3 +62,7 @@ public:
 private:
     WrappedClass value;
 };
+
+template <typename WrappedClass>
+class Cmp : public ComponentID
+{/**/};
