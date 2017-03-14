@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string>
 #include <functional>
+#include <typeinfo>
 
 #include <cassert>
 
@@ -34,7 +35,7 @@ namespace tx {
             return (8 * iInd + bInd + 1 < N) ? (uint64_t(n[8 * iInd + bInd]) << (bInd * 8)) : 0;
         }
 
-        /// composes a 64-bit int from four bytes read from the appropriate indices of a
+        /// composes a 64-bit int from four bytes read from the appropriate indices of a string
         template <size_t N>
         CONSTEXPR size_t setLong(const char(&n)[N], size_t iInd) {
             return setByte(n, iInd, 7) + setByte(n, iInd, 6) + setByte(n, iInd, 5) + setByte(n, iInd, 4) +
@@ -102,6 +103,11 @@ namespace tx {
         {}
 #endif
 
+        Identifier(const std::type_info& ti) {
+            strncpy_s(name__, ti.name(), MAX_LENGTH-1);
+            name__[MAX_LENGTH - 1] = '\0';
+        }
+
         CONSTEXPR uint64_t hash() const {
             return accum_hash(&id_[0], &id_[NUM_WORDS - 1], 0);
         }
@@ -123,11 +129,10 @@ namespace tx {
             return array_less(id_, other.id_);
         }
 
-    private:
         const union {
             std::array<uint64_t, NUM_WORDS> id_;
             std::array<char, MAX_LENGTH> name_;
-            char name__[MAX_LENGTH]; // not strictly necessary
+            char name__[MAX_LENGTH]; // not strictly necessary, but useful for debugging
         };
     };
 
@@ -142,12 +147,13 @@ namespace tx {
     // typedefs deriving from Identifier
     STRONG_TYPEDEF(Identifier, ComponentID);
     STRONG_TYPEDEF(Identifier, EntityID);
+    STRONG_TYPEDEF(Identifier, SystemID);
     STRONG_TYPEDEF(Identifier, TagID);
 } // namespace tx
 
 
 
-  // template hash function to be used for strong typedefs
+// template hash function to be used for strong typedefs
 namespace std { template<> class hash<tx::Identifier> : public tx::IdentifierHash<tx::Identifier> { }; }
 std::ostream & operator<<(std::ostream & str, const tx::Identifier& iId) { str << iId.name(); return str; };
 
@@ -156,6 +162,9 @@ std::ostream & operator<<(std::ostream & str, const tx::ComponentID& cId) { str 
 
 namespace std { template<> class hash<tx::EntityID> : public tx::IdentifierHash<tx::EntityID> { }; }
 std::ostream & operator<<(std::ostream & str, const tx::EntityID& eId) { str << eId.name(); return str; };
+
+namespace std { template<> class hash<tx::SystemID> : public tx::IdentifierHash<tx::SystemID> { }; }
+std::ostream & operator<<(std::ostream & str, const tx::SystemID& sId) { str << sId.name(); return str; };
 
 namespace std { template<> class hash<tx::TagID> : public tx::IdentifierHash<tx::TagID> { }; }
 std::ostream & operator<<(std::ostream & str, const tx::TagID& tId) { str << tId.name(); return str; };

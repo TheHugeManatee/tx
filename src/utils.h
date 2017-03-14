@@ -134,15 +134,15 @@ namespace tx {
     static ResetAfterScope<U, V> setTemporarily(U& tgt, const V& value) {
         return ResetAfterScope<U, V>(tgt, value);
     }
-#define SET_TEMPORARILY(variable, value) auto temp_##variable = setTemporarily((variable), (value))
+#define SET_TEMPORARILY(variable, value) auto temp_##variable = tx::setTemporarily((variable), (value))
 
 
     /**
      *  Assertion function, based on inviwo assertion
      */
     void txAssertion(const char* fileName, const char* functionName, long lineNumber,
-        const std::string& message) {
-        std::cout << "Assertion in (" << fileName << ", " << functionName << ", Ln " << lineNumber
+        const char* condition, const std::string& message) {
+        std::cout << "Assertion \"" << condition << "\" in (" << fileName << ", " << functionName << ", Ln " << lineNumber
             << "): ";
         std::cout << message << std::endl;
 
@@ -151,7 +151,7 @@ namespace tx {
 #else
         raise(SIGTRAP);
 #endif
-        exit(-1);
+        std::quick_exit(-1);
     }
 
 #if defined(_DEBUG)
@@ -159,7 +159,7 @@ namespace tx {
     {                                                                                             \
         std::ostringstream stream__;                                                              \
         stream__ << message;                                                                      \
-        if (!(bool(condition))) txAssertion(__FILE__, __FUNCTION__, __LINE__, (stream__.str())); \
+        if (!(bool(condition))) tx::txAssertion(__FILE__, __FUNCTION__, __LINE__, #condition, (stream__.str())); \
     }
 #else
 #define txAssertion(condition, message)

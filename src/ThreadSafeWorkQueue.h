@@ -17,13 +17,13 @@
 namespace tx
 {
     template <typename T>
-    class ThreadSafeQueue
+    class ThreadSafeWorkQueue
     {
     public:
         /**
          * Destructor.
          */
-        ~ThreadSafeQueue(void)
+        ~ThreadSafeWorkQueue(void)
         {
             invalidate();
         }

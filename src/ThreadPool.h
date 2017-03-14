@@ -8,7 +8,7 @@
 #ifndef THREADPOOL_H__
 #define THREADPOOL_H__
 
-#include "ThreadSafeQueue.h"
+#include "ThreadSafeWorkQueue.h"
 
 #include <algorithm>
 #include <atomic>
@@ -210,7 +210,7 @@ namespace tx
 
     private:
         std::atomic_bool m_done;
-        ThreadSafeQueue<std::unique_ptr<IThreadTask>> m_workQueue;
+        ThreadSafeWorkQueue<std::unique_ptr<IThreadTask>> m_workQueue;
         std::vector<std::thread> m_threads;
     };
 

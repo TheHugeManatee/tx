@@ -15,7 +15,7 @@
 namespace tx {
 
     class Entity;
-    class System;
+    template <typename Derived> class System;
 
 
     class Context {
@@ -32,6 +32,9 @@ namespace tx {
 
         template<typename ArrayN, typename Fn>
         tx::TaskFuture<size_t> each(ArrayN cIds, Fn fn);
+
+        template<typename ArrayN, typename Fn>
+        tx::TaskFuture<size_t> each(ArrayN cIds, Fn fn) const;
 
         tx::TaskFuture<size_t> each(const std::function<void(const EntityID&, Entity&)> fn);
 
@@ -108,10 +111,20 @@ namespace tx {
          *  Puts an event onto the event bus to be consumed by the systems
          */
         void emitEvent(const Event& event) {
-            std::cout << "\t\t" << "Event emitted for " << event.eId << " and " << event.cId << std::endl;
-            for (auto& s : systems_) {
-                if (s->isInterested(*this, event.eId)) {
-                    s->pushEvent(event);
+            if (event.type == Event::SYSTEMUPDATED) {
+                std::cout << "\t\t" << "Event emitted for System " << event.sId << std::endl;
+                for (auto& s : systems_) {
+                    if (s->isInterested(event.sId)) {
+                        s->pushEvent(event);
+                    }
+                }
+            }
+            else {
+                std::cout << "\t\t" << "Event emitted for " << event.eId << " and " << event.cId << std::endl;
+                for (auto& s : systems_) {
+                    if (s->isInterested(*this, event.eId, event.cId)) {
+                        s->pushEvent(event);
+                    }
                 }
             }
         }
@@ -128,7 +141,7 @@ namespace tx {
 
     private:
         mutable std::unordered_map<EntityID, Entity> entities_; // mutable so we can still get const refs out from a const Context
-        std::vector<std::unique_ptr<System>> systems_;
+        std::vector<std::unique_ptr<SystemBase>> systems_;
 
         /**
         *  Returns the component of an entity. If it either entity or component do not exist,
@@ -205,6 +218,34 @@ namespace tx {
                 pr.set_value(n);
                 return pr.get_future();
             };
+
+            /**
+            *  Implements each() with an array of known component types and a functional type FFn, const version
+            */
+            template <typename FFn>
+            static tx::TaskFuture<size_t> impl_const(const Context& c, std::array<ComponentID, N> cIds, FFn fn) {
+                std::promise<size_t> pr;
+
+                // Check the number of components and IDs
+                static_assert(sizeof...(ComponentArgs) == N, "Number of Component IDs does not match functor signature!");
+                // check the functor signature
+                static_assert(all_true<std::is_reference<ComponentArgs>::value...>::value, "Components can only be accessed through references!");
+                static_assert(all_true<std::is_const<ComponentArgs>::value...>::value, "Const version can only access const references!");
+                //static_assert(all_true<std::is_base_of<ComponentBase, typename std::remove_reference<C>::type>::value...>::value, "Functor signature must only contain Components (derived from ComponentBase)!");
+
+                const auto aspect = Aspect<ComponentArgs...>(cIds);
+
+                size_t n = 0;
+                for (auto& e : c.entities_) {
+                    if (aspect.checkAspect(e.second)) {
+                        c.callFuncWithComponents<ComponentArgs...>(fn, e.first, cIds, std::make_index_sequence<N>{}, e.first);
+                        ++n;
+                    }
+                }
+
+                pr.set_value(n);
+                return pr.get_future();
+            };
         };
     };
 
@@ -241,11 +282,18 @@ namespace tx {
         return each_variadic_impl<ArrayN, Fn>::impl(*this, cIds, fn);
     }
 
+    template<typename ArrayN, typename Fn>
+    TaskFuture<size_t> Context::each(ArrayN cIds, Fn fn) const {
+        return each_variadic_impl<ArrayN, Fn>::impl_const(*this, cIds, fn);
+    }
+
     void Context::updateSystems() {
         for (auto& s : systems_) {
             if (!s->isValid()) {
-                if (s->update(*this))
+                if (s->update(*this)) {
                     s->setValid();
+                }
+                emitEvent(Event(Event::SYSTEMUPDATED, s->getID()));
             }
         }
     }

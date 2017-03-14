@@ -57,7 +57,7 @@ const Aspect<PositionCmp, VelocityCmp, MeshCmp> allAspect({ "Position", "Velocit
 
 /// ======================== defining some systems ========================
 
-class SetupSystem : public System {
+class SetupSystem : public System<SetupSystem> {
     void init(Context &c) override {
         std::cout << "Setup system initializing.." << std::endl;
         c.emplaceComponent<PositionCmp>("config", "origin", 0., 0., 0.);
@@ -84,7 +84,7 @@ public:
     }
 };
 
-class SimulationSystem : public System {
+class SimulationSystem : public System<SimulationSystem> {
 public:
     bool update(Context& c) override {
         std::cout << "Simulation System update(): " << std::endl;
@@ -105,7 +105,7 @@ public:
     }
 };
 
-class UpdaterSystem : public System {
+class UpdaterSystem : public System<UpdaterSystem> {
 public:
     bool update(Context& c) override {
         std::cout << "Updater update(): " << std::endl;
