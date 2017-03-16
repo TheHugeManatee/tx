@@ -61,9 +61,11 @@ const Aspect<PositionCmp, VelocityCmp, MeshCmp> allAspect({ "Position", "Velocit
 
 class SetupSystem : public System<SetupSystem> {
     void init(Context &c) override {
-        c.emplaceComponent<PositionCmp>("config", "origin", 0., 0., 0.);
-        c.emplaceComponent<PositionCmp>("config", "direction");
-        c.emplaceComponent<VelocityCmp>("config", "gravity", 0., 0., -9.81);
+        c.exec([](Context::ModifyingProxy& p) {
+            p.emplaceComponent<PositionCmp>("config", "origin", 0., 0., 0.);
+            p.emplaceComponent<PositionCmp>("config", "direction");
+            p.emplaceComponent<VelocityCmp>("config", "gravity", 0., 0., -9.81);
+        });
     }
 };
 
@@ -221,16 +223,19 @@ int main(int, char*[]) {
     world.emplaceSystem<UpdaterSystem>();
     world.emplaceSystem<DrawingSystem>();
 
-    world.setEntity("cube", std::move(cube));
-    world.setEntity("circle", std::move(circle));
-    world.setEntity("foo", std::move(foo));
+    world.exec([&](Context::ModifyingProxy& p) {
+        p.setEntity("cube", std::move(cube));
+        p.setEntity("circle", std::move(circle));
+        p.setEntity("foo", std::move(foo));
+    });
 
     std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
     std::cout << "Updating the world.." << std::endl;
     world.runSequential([]() { static int t = 0; return ++t < 3; });
 
+    // Tests exec functionality.
     Vec3 g;
-    bool found = world.getComponent("config", "gravity", g); // query a component
+    bool found = world.exec( [&](Context::ReadOnlyProxy& p) -> bool { return p.getComponent<Vec3>("config", "gravity", g); }).get();
     if (!found) {
         std::cout << "Error: Gravity component not found!" << std::endl;
     }

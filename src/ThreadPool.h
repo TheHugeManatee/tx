@@ -26,6 +26,8 @@ namespace tx
     /**
     * A wrapper around a std::future that adds the behavior of futures returned from std::async.
     * Specifically, this object will block and wait for execution to finish before going out of scope.
+    * Use \a detach() if you do not care about the result and do not require waiting for it in the
+    * destructor.
     */
     template <typename T>
     class TaskFuture
@@ -49,11 +51,29 @@ namespace tx
             }
         }
 
+        /**
+         *  checks if the future has a valid state, \see std::future::valid()
+         */
+        bool valid(void) {
+            return m_future.valid();
+        }
+
+        /**
+         *  Returns the state. Invokes undefined behavior if valid() == false
+         */
         auto get(void)
         {
             return m_future.get();
         }
 
+        /**
+         *  Detaches the TaskFuture from the actual future, effectively abandoning
+         *  the result. After this, valid() == false and the destructor will not
+         *  block until the future is available.
+         */
+        void abandon(void) {
+            m_future = std::future<T>();
+        }
 
     private:
         std::future<T> m_future;

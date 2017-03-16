@@ -33,15 +33,24 @@ As with Entities themselves, components are tagged with a name (Component ID) an
 ### Aspect
 An aspect of an entity can be thought of as an interface specification that an entity suffices or not. Therefore, an aspect is a specification of Component-ID + Component Type pairs that an entity can be checked against to ascertain if an entity has that aspect.
 
+### Event
+Events are created for specific changes in the context. Currently, the most important events are:
+ - **ComponentChanged**: Notifies an update to a component, passing both the name of the entity and the component that have changed
+ - **SystemUpdated**: Notifies that a system update() has finished.
+
 ### System
 A system encapsulates a specialized part of the program logic.
 They are expected to be stateless and only work on the data attached to the entities, potentially outputting new entities or components or modifying existing components.
 Systems implement logic that generally operates on all entities that have a specific aspect that is interesting for the system.
 
-Systems are executed in parallel and, in the general case, asynchronously and can have different trigger strategies:
- - A **Timer System** is executed regularly after a specific timeout. This can for example be a physics update system or rendering system that will be fixed ad 60FPS. They can also be externally triggered from a client application.
- - An **Entity triggered** system will only react to specific events regarding entities that it is interested in. This can be for example independent subsystems that trigger irregularly when high-level parameters change, for example the window size, a global setting.
- - **Sequentially triggered system** : A system is triggered to update if one or several upstream systems have finished updating. This closely corresponds to nodes in a data flow network, which only execute if their input data has changed.
+Systems are generally inactive as long as they are in a valid state.
+If a system is invalidated, it will be scheduled to update using an internal thread pool. A system can be either invalidated externally by client code, or internally by receiving an Event it is interested in.
+
+A system specifies which Events it is interested in by overriding one or several isInterested overloads.
+Therefore, there are three ways to semantically trigger a system:
+ - **Component Update triggered**: Systems can be triggered when specific components have changed. These component change updates can be filtered to only trigger on components of entities which define specific aspects, which is the most common use case. This can be for example independent subsystems that trigger irregularly when high-level parameters change, for example the window size or a global setting.
+ - **Sequentially triggered** : A system is triggered to update if one or several upstream systems have finished updating. This closely corresponds to nodes in a data flow network, which only execute if their input data has changed.
+- **Externally triggered**: Client code issues an update for the system.
 
 Dependencies can be specified between systems to optimize the parallel or sequential execution.
 

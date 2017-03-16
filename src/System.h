@@ -210,7 +210,8 @@ namespace tx {
     template <template<class... > class Aspect_, class... C>
     bool AspectSpecificSystem<Aspect_<C...>>::isInterested(const Context& c, const EntityID& eId, const ComponentID& cId) const
     {
-        return aspect.isIDPartOf(cId) && aspect.checkAspect(c.getEntity(eId));
+        // TODO restore this check somehow
+        return aspect.isIDPartOf(cId)/* && aspect.checkAspect(c.getEntity(eId))*/;
     }
 
 } // namespace tx

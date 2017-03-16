@@ -60,9 +60,11 @@ const Aspect<PositionCmp, VelocityCmp, MeshCmp> allAspect({ "Position", "Velocit
 class SetupSystem : public System<SetupSystem> {
     void init(Context &c) override {
         std::cout << "Setup system initializing.." << std::endl;
-        c.emplaceComponent<PositionCmp>("config", "origin", 0., 0., 0.);
-        c.emplaceComponent<PositionCmp>("config", "direction");
-        c.emplaceComponent<VelocityCmp>("config", "gravity", 0., 0., -9.81);
+        c.exec([](Context::ModifyingProxy& p) {
+            p.emplaceComponent<PositionCmp>("config", "origin", 0., 0., 0.);
+            p.emplaceComponent<PositionCmp>("config", "direction");
+            p.emplaceComponent<VelocityCmp>("config", "gravity", 0., 0., -9.81);
+        }).abandon(); // detach so this will not block
     }
 };
 
@@ -79,7 +81,7 @@ public:
 
         c.each(std::array<ComponentID, 2>{ "Position", "Mesh" }, [&c](const EntityID& id, const PositionCmp& pos, const MeshCmp& m) -> void {
             std::cout << "\t Drawing " << id << " with " << m.vertices.size() << " vertices at " << pos.x << " " << pos.y << " " << pos.z << std::endl;
-        });
+        }).abandon(); // don't care when it actually finishes
         return true;
     }
 };
@@ -94,13 +96,13 @@ public:
         });
 
         Vec3 g;
-        c.getComponent("config", "gravity", g);
+        c.exec([&](Context::ReadOnlyProxy& p) { p.getComponent("config", "gravity", g); }); // no detach so it blocks until g is available
         c.each(std::array<ComponentID, 2>{ "Position", "Velocity" }, [&g](const EntityID& id, PositionCmp& pos, const VelocityCmp& v) -> void {
             pos.x += v.x;
             pos.y += v.y;
             pos.z += v.z;
             std::cout << "\tMoving " << id << " to " << pos.x << " " << pos.y << " " << pos.z << std::endl;
-        });
+        }).abandon(); // don't care when it actually finishes
         return false;
     }
 };
@@ -116,7 +118,7 @@ public:
 
         c.each([&c](const EntityID& id, Entity& e) {
             std::cout << "\tUpdating " << id << std::endl;
-        });
+        }).abandon(); // don't care when it actually finishes
         return false;
     }
 };
@@ -149,9 +151,11 @@ int main(int, char*[]) {
     world.emplaceSystem<UpdaterSystem>();
     world.emplaceSystem<DrawingSystem>();
 
-    world.setEntity("cube", std::move(cube));
-    world.setEntity("circle", std::move(circle));
-    world.setEntity("foo", std::move(foo));
+    world.exec([&](Context::ModifyingProxy& p) {
+        p.setEntity("cube", std::move(cube));
+        p.setEntity("circle", std::move(circle));
+        p.setEntity("foo", std::move(foo));
+    });
 
     std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
     std::cout << "Updating the world.." << std::endl;

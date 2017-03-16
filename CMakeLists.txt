@@ -15,7 +15,7 @@ FILE(GLOB TXHeaders
     src/Identifier.h
     src/System.h
     src/ThreadPool.h
-    src/ThreadSafeQueue.h
+    src/ThreadSafeWorkQueue.h
     src/utils.h
 )
 FILE(GLOB TXSource
@@ -23,13 +23,13 @@ FILE(GLOB TXSource
 )
 
 IF(MSVC12)
-	add_definitions(-DOVERRIDE=override)
-	add_definitions(-DNOEXCEPT=)
-	add_definitions(-DCONSTEXPR=)
+    add_definitions(-DOVERRIDE=override)
+    add_definitions(-DNOEXCEPT=)
+    add_definitions(-DCONSTEXPR=)
 ELSE()
-	add_definitions(-DOVERRIDE=override)
-	add_definitions(-DNOEXCEPT=noexcept)
-	add_definitions(-DCONSTEXPR=constexpr)
+    add_definitions(-DOVERRIDE=override)
+    add_definitions(-DNOEXCEPT=noexcept)
+    add_definitions(-DCONSTEXPR=constexpr)
 ENDIF()
 
 # ADD_DEFINITIONS()
