@@ -18,7 +18,9 @@ namespace tx {
     class Entity;
     template <typename Derived> class System;
 
-
+    /**
+     *  The context is the central storage/exchange object. It handles 
+     */
     class Context {
     public:
         /**
@@ -50,7 +52,7 @@ namespace tx {
 
         protected:
             Context& parent_;
-        };
+        }; // class ReadOnlyProxy
 
         /**
          *  Exposes read-write access to the context. Obtaining non-const access to
@@ -137,11 +139,16 @@ namespace tx {
         protected:
             Context& parent_;
             std::list<Event> eventList_;
-        };
+        }; // class ModifyingProxy
 
     public:
-        Context() {};
-        ~Context() {};
+        Context() = default;
+        ~Context() = default;
+        // is only default-constructible (at the moment)
+        Context(const Context &) = delete;
+        Context(Context &&) = delete;
+        Context& operator=(const Context &) = delete;
+        Context& operator=(Context &&) = delete;
 
         /**
          *  Instantiate a new system. The supplied arguments are forwarded to the system's constructor.

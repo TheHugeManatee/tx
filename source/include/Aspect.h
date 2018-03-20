@@ -20,15 +20,15 @@ namespace tx {
         static const size_t nCmp = sizeof...(ComponentTypes);
         using IDs_type = std::array<ComponentID, sizeof...(ComponentTypes)>;
 
-        Aspect(IDs_type&& ids) NOEXCEPT
+        Aspect(IDs_type&& ids) noexcept
             : ids_{ std::move(ids) }
         { }
 
-        Aspect(const IDs_type& ids) NOEXCEPT
+        Aspect(const IDs_type& ids) noexcept
             : ids_{ ids }
         { }
 
-        bool checkAspect(const Entity& entity) const NOEXCEPT {
+        bool checkAspect(const Entity& entity) const noexcept {
             // TODO review this, might be unsafe cause of this funny idx++ which is unsequenced. Replace with "swallow" pattern
             size_t idx = 0;
             bool componentFlags[] = { entity.hasComponent<ComponentTypes>(ids_[idx++])... };
@@ -58,7 +58,7 @@ namespace tx {
     template <class... ComponentTypes>
     class AspectInstance : public Aspect<ComponentTypes...> {
     public:
-        AspectInstance(std::pair<ComponentID, std::add_pointer_t<ComponentTypes>>... args) NOEXCEPT
+        AspectInstance(std::pair<ComponentID, std::add_pointer_t<ComponentTypes>>... args) noexcept
             : values_{ std::move(args.second)... }
         {};
     private:

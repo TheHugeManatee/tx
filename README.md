@@ -13,7 +13,7 @@
 Therefore,
   - It is optimized for flexible, dynamic entities
   - It deals with heterogeneous entities instead of optimizing for homogeneous entities having the same components. For these scenarios, refer to other ECS libraries such as ECST or EntityX
-  - It is designed to support handling of several (tens of) thousands of individual entities, not millions
+  - It is designed to support handling of low (tens of) thousands of individual entities, not millions
 
 
 ## Definitions

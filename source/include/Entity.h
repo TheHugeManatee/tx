@@ -37,10 +37,10 @@ namespace tx {
         Entity& operator=(const Entity& rhs) = delete;
 
         template<typename C>
-        void setComponent(const ComponentID& id, C&& componentData) NOEXCEPT;
+        void setComponent(const ComponentID& id, C&& componentData) noexcept;
 
         template <typename C>
-        bool hasComponent(const ComponentID& id) const NOEXCEPT;
+        bool hasComponent(const ComponentID& id) const noexcept;
 
 
         std::string toString() const;
@@ -59,13 +59,13 @@ namespace tx {
 namespace tx {
 
     template <typename C>
-    bool Entity::hasComponent(const ComponentID& id) const NOEXCEPT {
+    bool Entity::hasComponent(const ComponentID& id) const noexcept {
         auto it = components_.find(id);
         return (it != components_.end());
     }
 
     template <typename C>
-    void Entity::setComponent(const ComponentID& id, C&& componentData) NOEXCEPT {
+    void Entity::setComponent(const ComponentID& id, C&& componentData) noexcept {
         components_.emplace(std::make_pair(id, std::make_unique<Component<C>>(componentData)));
     }
 

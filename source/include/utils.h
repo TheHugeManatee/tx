@@ -56,13 +56,13 @@ namespace tx {
         const std::size_t sz_;
     public:
         template<std::size_t N>
-        CONSTEXPR str_const(const char(&a)[N]) : // ctor
+        constexpr str_const(const char(&a)[N]) : // ctor
             p_(a), sz_(N - 1) {}
-        CONSTEXPR char operator[](std::size_t n) const { // []
+        constexpr char operator[](std::size_t n) const { // []
             return n < sz_ ? p_[n] :
                 throw std::out_of_range("");
         }
-        CONSTEXPR std::size_t size() const { return sz_; } // size()
+        constexpr std::size_t size() const { return sz_; } // size()
     };
 
     // function traits implementation, from http://stackoverflow.com/a/7943765/2415419

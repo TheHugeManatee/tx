@@ -13,8 +13,10 @@ using namespace tx;
 #include <iostream>
 #include <typeindex>
 
+#if __GNUC__
 #pragma GCC diagnostic ignored "-Wmissing-braces"
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
 
 /// ======================== Some Classes to manage ========================
 struct Vec3 {
@@ -258,10 +260,10 @@ int main(int, char*[]) {
     std::array<char, sizeof("blabla")> S = { "blabla" };
     //std::array<char, sizeof("hello world! ")> s2{ s,'h' };
 
-    CONSTEXPR Identifier i("blabla");
-    CONSTEXPR Identifier j("blablu");
-    CONSTEXPR Identifier k("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234");
-    CONSTEXPR Identifier l("ABCDEFGHIJKLMNOPQRSTUVWXYZ12345");
+    constexpr Identifier i("blabla");
+    constexpr Identifier j("blablu");
+    constexpr Identifier k("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234");
+    constexpr Identifier l("ABCDEFGHIJKLMNOPQRSTUVWXYZ12345");
     bool exceptThrown = false;
     try { // This cannot compile as constexpr and will throw an exception at runtime (too long)
         Identifier m("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456");
@@ -274,9 +276,9 @@ int main(int, char*[]) {
         std::cout << "ERROR: Expected exception was not thrown!" << std::endl;
     }
 
-    CONSTEXPR bool ieqj = i == j;
+    constexpr bool ieqj = i == j;
     //constexpr uint64_t ihash{ i.hash() }; // somehow this does not run in VS, might be compiler bug
-    CONSTEXPR bool iltj = i < j;
+    constexpr bool iltj = i < j;
 
     std::cout << "Identifier i: " << i << " " << i.hash() << std::endl;
     std::cout << "Identifier j: " << j << " " << j.hash() << std::endl;

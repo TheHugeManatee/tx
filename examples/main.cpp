@@ -11,8 +11,10 @@ using namespace tx;
 #include <iostream>
 #include <typeindex>
 
+#if __GNUC__
 #pragma GCC diagnostic ignored "-Wmissing-braces"
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
 
 /// ======================== Some Classes to manage ========================
 struct Vec3 {
@@ -97,7 +99,8 @@ public:
 
         Vec3 g;
         c.exec([&](Context::ReadOnlyProxy& p) { p.getComponent("config", "gravity", g); }); // no detach so it blocks until g is available
-        c.each(std::array<ComponentID, 2>{ "Position", "Velocity" }, [&g](const EntityID& id, PositionCmp& pos, const VelocityCmp& v) -> void {
+        c.each(std::array<ComponentID, 2>{ "Position", "Velocity" }, 
+        [&g](const EntityID& id, PositionCmp& pos, const VelocityCmp& v) -> void {
             pos.x += v.x;
             pos.y += v.y;
             pos.z += v.z;
@@ -116,7 +119,7 @@ public:
             std::cout << "\t\t\tUpdater System got an event about " << e.eId << std::endl;
         });
 
-        c.each([&c](const EntityID& id, Entity& e) {
+        c.each([&c](const EntityID& id, Entity& /*e*/) {
             std::cout << "\tUpdating " << id << std::endl;
         }).abandon(); // don't care when it actually finishes
         return false;
@@ -136,6 +139,7 @@ int main(int, char*[]) {
     Entity circle;
     circle.setComponent("Position", PositionCmp(2.,2.,2.));
     circle.setComponent("Velocity", VelocityCmp(0.,2.,0.));
+    circle.setComponent("Radius", 5.0f);
 
     Entity foo;
     foo.setComponent("Position", PositionCmp(3.,3.,3.));

@@ -9,7 +9,7 @@ namespace tx {
     public:
         virtual ~ComponentBase() {};
 
-        size_t hash() const NOEXCEPT {
+        size_t hash() const noexcept {
             return typeid(*this).hash_code();
         }
     };
