@@ -66,7 +66,7 @@ class SetupSystem : public System<SetupSystem> {
             p.emplaceComponent<PositionCmp>("config", "origin", 0., 0., 0.);
             p.emplaceComponent<PositionCmp>("config", "direction");
             p.emplaceComponent<VelocityCmp>("config", "gravity", 0., 0., -9.81);
-        }).abandon(); // detach so this will not block
+        }).detach(); // detach so this will not block
     }
 };
 
@@ -83,7 +83,7 @@ public:
 
         c.each(std::array<ComponentID, 2>{ "Position", "Mesh" }, [&c](const EntityID& id, const PositionCmp& pos, const MeshCmp& m) -> void {
             std::cout << "\t Drawing " << id << " with " << m.vertices.size() << " vertices at " << pos.x << " " << pos.y << " " << pos.z << std::endl;
-        }).abandon(); // don't care when it actually finishes
+        }).detach(); // don't care when it actually finishes
         return true;
     }
 };
@@ -105,7 +105,7 @@ public:
             pos.y += v.y;
             pos.z += v.z;
             std::cout << "\tMoving " << id << " to " << pos.x << " " << pos.y << " " << pos.z << std::endl;
-        }).abandon(); // don't care when it actually finishes
+        }).detach(); // don't care when it actually finishes
         return false;
     }
 };
@@ -121,14 +121,14 @@ public:
 
         c.each([&c](const EntityID& id, Entity& /*e*/) {
             std::cout << "\tUpdating " << id << std::endl;
-        }).abandon(); // don't care when it actually finishes
+        }).detach(); // don't care when it actually finishes
         return false;
     }
 };
 
 
 /// ======================== the main function ========================
-int main(int, char*[]) {
+int main(int /*unused*/, char*[] /*unused*/) {
 
     std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 

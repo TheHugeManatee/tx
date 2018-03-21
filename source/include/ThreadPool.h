@@ -63,6 +63,7 @@ namespace tx
          */
         auto get(void)
         {
+            assert(m_future.valid());
             return m_future.get();
         }
 
@@ -71,7 +72,7 @@ namespace tx
          *  the result. After this, valid() == false and the destructor will not
          *  block until the future is available.
          */
-        void abandon(void) {
+        void detach(void) {
             m_future = std::future<T>();
         }
 

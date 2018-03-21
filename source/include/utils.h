@@ -162,7 +162,7 @@ namespace tx {
         if (!(bool(condition))) tx::txAssertion(__FILE__, __FUNCTION__, __LINE__, #condition, (stream__.str())); \
     }
 #else
-#define txAssertion(condition, message)
+#define txAssert(condition, message)
 #endif
 
 }
