@@ -22,7 +22,7 @@ set_directory_properties(PROPERTIES VS_STARTUP_PROJECT tx_example)
 #set_property(TARGET tx_tests PROPERTY CXX_INCLUDE_WHAT_YOU_USE ON)
 
 if(MSVC)
-  target_compile_options(tx_tests PRIVATE "/fpermissive-")
+  target_compile_options(tx_tests PRIVATE "/permissive-")
 endif()
 
 add_test(

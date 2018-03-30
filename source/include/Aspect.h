@@ -20,8 +20,9 @@ class Aspect
 {
 public:
     static const size_t nCmp = sizeof...(ComponentTypes);
-    using IDs_type           = std::array<ComponentID, sizeof...(ComponentTypes)>;
+    using IDs_type           = std::array<ComponentID, nCmp>;
 
+    Aspect(const IDs_type& ids) noexcept : ids_{ ids } {}
     Aspect(IDs_type&& ids) noexcept : ids_{std::move(ids)} {}
 
     bool checkAspect(const Entity& entity) const noexcept

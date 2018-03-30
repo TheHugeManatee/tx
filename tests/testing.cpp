@@ -128,7 +128,7 @@ public:
         });
 
         c.each(
-            [&c](const EntityID& id, Entity& e) { std::cout << "\tUpdating " << id << std::endl; });
+            [&c](const EntityID& id, Entity& /*e*/) { std::cout << "\tUpdating " << id << std::endl; });
         return true;
     }
 };
