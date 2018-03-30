@@ -17,9 +17,9 @@ copy_dlls_for_debug(tx_tests "" "") # Copy dependencies next to the executable (
 # Setup our project as the startup project for Visual so that people don't need to do it manually
 set_directory_properties(PROPERTIES VS_STARTUP_PROJECT tx_example)
 
-set_property(TARGET tx_tests PROPERTY CXX_CLANG_TIDY ON)
-set_property(TARGET tx_tests PROPERTY CXX_CPPLINT ON)
-set_property(TARGET tx_tests PROPERTY CXX_INCLUDE_WHAT_YOU_USE ON)
+#set_property(TARGET tx_tests PROPERTY CXX_CLANG_TIDY ON)
+#set_property(TARGET tx_tests PROPERTY CXX_CPPLINT ON)
+#set_property(TARGET tx_tests PROPERTY CXX_INCLUDE_WHAT_YOU_USE ON)
 
 if(MSVC)
   target_compile_options(tx_tests PRIVATE "/fpermissive-")

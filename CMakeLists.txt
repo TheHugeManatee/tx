@@ -98,7 +98,7 @@ target_include_directories(tx
 
 # Require c++14, this is better than setting CMAKE_CXX_STANDARD since it won't pollute other targets
 # note : cxx_std_* features were added in CMake 3.8.2
-target_compile_features(tx INTERFACE cxx_std_14)
+target_compile_features(tx INTERFACE cxx_std_17)
 
 # Give a 'scoped' name to libraries targets, as it can't be mistaken with system libraries
 add_library(tx::tx ALIAS tx)
@@ -127,9 +127,9 @@ copy_dlls_for_debug(tx_example "" "") # Copy dependencies next to the executable
 # Setup our project as the startup project for Visual so that people don't need to do it manually
 set_directory_properties(PROPERTIES VS_STARTUP_PROJECT tx_example)
 
-set_property(TARGET tx_example PROPERTY CXX_CLANG_TIDY ON)
-set_property(TARGET tx_example PROPERTY CXX_CPPLINT ON)
-set_property(TARGET tx_example PROPERTY CXX_INCLUDE_WHAT_YOU_USE ON)
+#set_property(TARGET tx_example PROPERTY CXX_CLANG_TIDY ON)
+#set_property(TARGET tx_example PROPERTY CXX_CPPLINT ON)
+#set_property(TARGET tx_example PROPERTY CXX_INCLUDE_WHAT_YOU_USE ON)
 
 if(MSVC)
   target_compile_options(tx_example PRIVATE "/fpermissive-")
