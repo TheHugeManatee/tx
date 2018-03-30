@@ -11,7 +11,7 @@ namespace tx {
      *  Aspect class defines an "interface" that an entity can be checked against, which defines
      *  a collection of ComponentIDs and associated types.
      *
-     *  // TODO: Make this class constexpr
+     *  // TODO: Make this class constexpr?
      */
     template <class... ComponentTypes>
     class Aspect {
@@ -22,10 +22,6 @@ namespace tx {
 
         Aspect(IDs_type&& ids) noexcept
             : ids_{ std::move(ids) }
-        { }
-
-        Aspect(const IDs_type& ids) noexcept
-            : ids_{ ids }
         { }
 
         bool checkAspect(const Entity& entity) const noexcept {

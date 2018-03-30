@@ -49,13 +49,13 @@ using TagCmp = TagID;
 // get type of the aspect
 using SimAspect = Aspect<PositionCmp, VelocityCmp>;
 // generate aspect instance using initializer list
-const SimAspect simAspect({ {"Position", "Velocity"} });
+const SimAspect simAspect({"Position", "Velocity" });
 // generate aspect instance using template arguments
-const Aspect<PositionCmp, VelocityCmp> simAspect3({ {"Position", "Velocity"} });
+const Aspect<PositionCmp, VelocityCmp> simAspect3({"Position", "Velocity"});
 
 using DrawAspect = Aspect<PositionCmp, MeshCmp>;
-const DrawAspect drawAspect({ {"Position", "Mesh"} });
-const Aspect<PositionCmp, VelocityCmp, MeshCmp> allAspect({ {"Position", "Velocity", "Mesh"} });
+const DrawAspect drawAspect({ "Position", "Mesh"} );
+const Aspect<PositionCmp, VelocityCmp, MeshCmp> allAspect({"Position", "Velocity", "Mesh"});
 
 /// ======================== defining some systems ========================
 

@@ -131,11 +131,15 @@ set_property(TARGET tx_example PROPERTY CXX_CLANG_TIDY ON)
 set_property(TARGET tx_example PROPERTY CXX_CPPLINT ON)
 set_property(TARGET tx_example PROPERTY CXX_INCLUDE_WHAT_YOU_USE ON)
 
+if(MSVC)
+  target_compile_options(tx_example PRIVATE "/fpermissive-")
+endif()
+
 #===========#
 #   Tests   #
 #===========#
 
-if(BP_BUILD_TESTS)
+if(TX_BUILD_TESTS)
     # Let the user add options to the test runner if needed
     set(TEST_RUNNER_PARAMS "--force-colors=true" CACHE STRING "Options to add to our test runners commands")
     # In a real project you most likely want to exclude test folders

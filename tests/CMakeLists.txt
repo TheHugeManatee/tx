@@ -21,6 +21,9 @@ set_property(TARGET tx_tests PROPERTY CXX_CLANG_TIDY ON)
 set_property(TARGET tx_tests PROPERTY CXX_CPPLINT ON)
 set_property(TARGET tx_tests PROPERTY CXX_INCLUDE_WHAT_YOU_USE ON)
 
+if(MSVC)
+  target_compile_options(tx_tests PRIVATE "/fpermissive-")
+endif()
 
 add_test(
     NAME TX.tests
