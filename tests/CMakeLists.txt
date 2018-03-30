@@ -9,6 +9,19 @@ cmake_minimum_required(VERSION 3.8.2)
 add_executable(tx_tests testing.cpp)
 target_link_libraries(tx_tests tx::tx)
 
+# CMake scripts extensions
+target_set_warnings(tx_tests ENABLE ALL AS_ERROR ALL DISABLE Annoying) # Helper that can set default warning flags for you
+target_enable_lto(tx_tests optimized) #enable lto if available for non-debug configurations
+copy_dlls_for_debug(tx_tests "" "") # Copy dependencies next to the executable (DLLs for example)
+
+# Setup our project as the startup project for Visual so that people don't need to do it manually
+set_directory_properties(PROPERTIES VS_STARTUP_PROJECT tx_example)
+
+set_property(TARGET tx_tests PROPERTY CXX_CLANG_TIDY ON)
+set_property(TARGET tx_tests PROPERTY CXX_CPPLINT ON)
+set_property(TARGET tx_tests PROPERTY CXX_INCLUDE_WHAT_YOU_USE ON)
+
+
 add_test(
     NAME TX.tests
     COMMAND tx_tests ${TEST_RUNNER_PARAMS}

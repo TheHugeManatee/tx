@@ -1,15 +1,15 @@
 #include "Entity.h"
-#include "Component.h"
-#include "System.h"
 #include "Aspect.h"
+#include "Component.h"
 #include "Context.h"
 #include "Identifier.h"
+#include "System.h"
 
 using namespace tx;
 
-#include <vector>
 #include <iostream>
 #include <typeindex>
+#include <vector>
 
 #if __GNUC__
 #pragma GCC diagnostic ignored "-Wmissing-braces"
@@ -19,7 +19,7 @@ using namespace tx;
 /// ======================== Some Classes to manage ========================
 struct Vec3 {
     double x, y, z;
-    Vec3(double x_ = 0.0, double y_ = 0.0, double z_ = 0.0) : x(x_), y(y_), z(z_) {};
+    explicit Vec3(double x_ = 0.0, double y_ = 0.0, double z_ = 0.0) : x(x_), y(y_), z(z_) {};
 };
 
 /// ======================== Some component definitions ========================
@@ -49,13 +49,13 @@ using TagCmp = TagID;
 // get type of the aspect
 using SimAspect = Aspect<PositionCmp, VelocityCmp>;
 // generate aspect instance using initializer list
-const SimAspect simAspect({ "Position", "Velocity" });
+const SimAspect simAspect({ {"Position", "Velocity"} });
 // generate aspect instance using template arguments
-const Aspect<PositionCmp, VelocityCmp> simAspect3({ "Position", "Velocity" });
+const Aspect<PositionCmp, VelocityCmp> simAspect3({ {"Position", "Velocity"} });
 
 using DrawAspect = Aspect<PositionCmp, MeshCmp>;
-const DrawAspect drawAspect({ "Position", "Mesh" });
-const Aspect<PositionCmp, VelocityCmp, MeshCmp> allAspect({ "Position", "Velocity", "Mesh" });
+const DrawAspect drawAspect({ {"Position", "Mesh"} });
+const Aspect<PositionCmp, VelocityCmp, MeshCmp> allAspect({ {"Position", "Velocity", "Mesh"} });
 
 /// ======================== defining some systems ========================
 
@@ -72,7 +72,7 @@ class SetupSystem : public System<SetupSystem> {
 
 class DrawingSystem : public AspectSpecificSystem<DrawAspect> {
 public:
-    DrawingSystem() : AspectSpecificSystem<DrawAspect>(std::array<ComponentID, 2>{ "Position", "Mesh" }) {};
+    DrawingSystem() : AspectSpecificSystem<DrawAspect>(std::array<ComponentID, 2>{ {"Position", "Mesh"} }) {};
 
     bool update(Context& c) override {
         std::cout << "Drawing system update(): " << std::endl;
@@ -81,7 +81,7 @@ public:
             std::cout << "\t\t\tDrawing System got an event about " << e.eId << std::endl;
         });
 
-        c.each(std::array<ComponentID, 2>{ "Position", "Mesh" }, [&c](const EntityID& id, const PositionCmp& pos, const MeshCmp& m) -> void {
+        c.each(std::array<ComponentID, 2>{ {"Position", "Mesh"} }, [&c](const EntityID& id, const PositionCmp& pos, const MeshCmp& m) -> void {
             std::cout << "\t Drawing " << id << " with " << m.vertices.size() << " vertices at " << pos.x << " " << pos.y << " " << pos.z << std::endl;
         }).detach(); // don't care when it actually finishes
         return true;
@@ -99,7 +99,7 @@ public:
 
         Vec3 g;
         c.exec([&](Context::ReadOnlyProxy& p) { p.getComponent("config", "gravity", g); }); // no detach so it blocks until g is available
-        c.each(std::array<ComponentID, 2>{ "Position", "Velocity" }, 
+        c.each(std::array<ComponentID, 2>{ {"Position", "Velocity"} }, 
         [&g](const EntityID& id, PositionCmp& pos, const VelocityCmp& v) -> void {
             pos.x += v.x;
             pos.y += v.y;
@@ -128,7 +128,7 @@ public:
 
 
 /// ======================== the main function ========================
-int main(int /*unused*/, char*[] /*unused*/) {
+int main(int /*unused*/, char* /*unused*/[] /*unused*/) {
 
     std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
 
