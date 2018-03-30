@@ -22,7 +22,7 @@ using namespace tx;
 struct Vec3
 {
     double x, y, z;
-    Vec3(double x_ = 0.0, double y_ = 0.0, double z_ = 0.0) : x(x_), y(y_), z(z_){};
+    explicit Vec3(double x_ = 0.0, double y_ = 0.0, double z_ = 0.0) : x(x_), y(y_), z(z_){};
 };
 
 /// ======================== Some component definitions ========================
@@ -43,13 +43,13 @@ using TagCmp  = TagID;
 // get type of the aspect
 using SimAspect = Aspect<PositionCmp, VelocityCmp>;
 // generate aspect instance using initializer list
-const SimAspect simAspect({"Position", "Velocity"});
+const SimAspect simAspect{{"Position", "Velocity"}};
 // generate aspect instance using template arguments
-const Aspect<PositionCmp, VelocityCmp> simAspect3({"Position", "Velocity"});
+const Aspect<PositionCmp, VelocityCmp> simAspect3{{"Position", "Velocity"}};
 
 using DrawAspect = Aspect<PositionCmp, MeshCmp>;
-const DrawAspect                                drawAspect({"Position", "Mesh"});
-const Aspect<PositionCmp, VelocityCmp, MeshCmp> allAspect({"Position", "Velocity", "Mesh"});
+const DrawAspect                                drawAspect{{"Position", "Mesh"}};
+const Aspect<PositionCmp, VelocityCmp, MeshCmp> allAspect{{"Position", "Velocity", "Mesh"}};
 
 /// ======================== defining some systems ========================
 
@@ -69,7 +69,7 @@ class DrawingSystem : public AspectSpecificSystem<DrawAspect>
 {
 public:
     DrawingSystem()
-        : AspectSpecificSystem<DrawAspect>(std::array<ComponentID, 2>{"Position", "Mesh"}){};
+        : AspectSpecificSystem<DrawAspect>(std::array<ComponentID, 2>{{"Position", "Mesh"}}){};
 
     bool update(Context& c) override
     {
@@ -79,8 +79,8 @@ public:
             std::cout << "\t\t\tDrawing System got an event about " << e.eId << std::endl;
         });
 
-        c.each(std::array<ComponentID, 2>{"Position", "Mesh"},
-               [&c](const EntityID& id, const PositionCmp& pos, const MeshCmp& m) -> void {
+        c.each(std::array<ComponentID, 2>{{"Position", "Mesh"}},
+               [](const EntityID& id, const PositionCmp& pos, const MeshCmp& m) -> void {
                    std::cout << "\t Drawing " << id << " with " << m.vertices.size()
                              << " vertices at " << pos.x << " " << pos.y << " " << pos.z
                              << std::endl;
@@ -100,8 +100,8 @@ public:
             std::cout << "\t\t\tSimulation System got an event about " << e.eId << std::endl;
         });
 
-        c.each(std::array<ComponentID, 2>{"Position", "Velocity"},
-               [&c](const EntityID& id, PositionCmp& pos, const VelocityCmp& v) -> void {
+        c.each(std::array<ComponentID, 2>{{"Position", "Velocity"}},
+               [](const EntityID& id, PositionCmp& pos, const VelocityCmp& v) -> void {
                    pos.x += v.x;
                    pos.y += v.y;
                    pos.z += v.z;
@@ -127,8 +127,9 @@ public:
             std::cout << "\t\t\tUpdater System got an event about " << e.eId << std::endl;
         });
 
-        c.each(
-            [&c](const EntityID& id, Entity& /*e*/) { std::cout << "\tUpdating " << id << std::endl; });
+        c.each([](const EntityID& id, Entity& /*e*/) {
+            std::cout << "\tUpdating " << id << std::endl;
+        });
         return true;
     }
 };
@@ -141,7 +142,7 @@ void testSizeof()
 }
 
 template<typename T>
-void testSizeof(const T&)
+void testSizeof(const T& /*unused*/)
 {
     std::cout << "Size of " << typeid(T).name() << " [" << std::type_index(typeid(T)).hash_code()
               << "]: " << sizeof(T) << std::endl;
@@ -164,7 +165,7 @@ std::string idName(const EntityID& id) { return "E" + id.name(); }
 std::string idName(const Identifier& id) { return "I" + id.name(); }
 
 /// ======================== the main function ========================
-int main(int, char* [])
+int main(int /*unused*/, char* /*unused*/ [])
 {
 
     std::cout << std::endl

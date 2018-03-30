@@ -51,13 +51,13 @@ using TagCmp  = TagID;
 // get type of the aspect
 using SimAspect = Aspect<PositionCmp, VelocityCmp>;
 // generate aspect instance using initializer list
-const SimAspect simAspect({"Position", "Velocity"});
+const SimAspect simAspect{{"Position", "Velocity"}};
 // generate aspect instance using template arguments
-const Aspect<PositionCmp, VelocityCmp> simAspect3({"Position", "Velocity"});
+const Aspect<PositionCmp, VelocityCmp> simAspect3{{"Position", "Velocity"}};
 
 using DrawAspect = Aspect<PositionCmp, MeshCmp>;
-const DrawAspect                                drawAspect({"Position", "Mesh"});
-const Aspect<PositionCmp, VelocityCmp, MeshCmp> allAspect({"Position", "Velocity", "Mesh"});
+const DrawAspect                                drawAspect{{"Position", "Mesh"}};
+const Aspect<PositionCmp, VelocityCmp, MeshCmp> allAspect{{"Position", "Velocity", "Mesh"}};
 
 /// ======================== defining some systems ========================
 
@@ -79,7 +79,7 @@ class DrawingSystem : public AspectSpecificSystem<DrawAspect>
 {
 public:
     DrawingSystem()
-        : AspectSpecificSystem<DrawAspect>(std::array<ComponentID, 2>{{"Position", "Mesh"}}){};
+        : AspectSpecificSystem<DrawAspect>(std::array<ComponentID, 2>{"Position", "Mesh"}){};
 
     bool update(Context& c) override
     {
@@ -90,7 +90,7 @@ public:
         });
 
         c.each(std::array<ComponentID, 2>{{"Position", "Mesh"}},
-               [&c](const EntityID& id, const PositionCmp& pos, const MeshCmp& m) -> void {
+               [](const EntityID& id, const PositionCmp& pos, const MeshCmp& m) -> void {
                    std::cout << "\t Drawing " << id << " with " << m.vertices.size()
                              << " vertices at " << pos.x << " " << pos.y << " " << pos.z
                              << std::endl;
@@ -116,7 +116,7 @@ public:
             p.getComponent("config", "gravity", g);
         }); // no detach so it blocks until g is available
         c.each(std::array<ComponentID, 2>{{"Position", "Velocity"}},
-               [&g](const EntityID& id, PositionCmp& pos, const VelocityCmp& v) -> void {
+               [](const EntityID& id, PositionCmp& pos, const VelocityCmp& v) -> void {
                    pos.x += v.x;
                    pos.y += v.y;
                    pos.z += v.z;
@@ -139,7 +139,7 @@ public:
             std::cout << "\t\t\tUpdater System got an event about " << e.eId << std::endl;
         });
 
-        c.each([&c](const EntityID& id, Entity& /*e*/) {
+        c.each([](const EntityID& id, Entity& /*e*/) {
              std::cout << "\tUpdating " << id << std::endl;
          })
             .detach(); // don't care when it actually finishes
